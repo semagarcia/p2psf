@@ -1,0 +1,30 @@
+module archivo {
+	/**
+	* Estructura para el alamacenamiento de la información de los archivos
+	*/
+	struct Archivo {
+		string nombre;
+		long tam;
+		long long checksum;
+	};
+
+	// Secuencia de archivos
+	typedef sequence <Archivo> archivos;
+};
+
+
+/**
+* Parte cliente, serían los N usuarios que interactuarán, en el inicio de la
+* conexión, con la parte servidora (concretamente, con el Coordinador).
+*/
+module cliente {
+	interface Usuario {
+
+	};
+};
+
+module coordinador {
+	interface Coordinador{
+		void login(in archivo::archivos as);
+	};
+};
