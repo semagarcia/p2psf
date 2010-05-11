@@ -1,31 +1,51 @@
-module archivo {
-	/**
-	* Estructura para el alamacenamiento de la información de los archivos
-	*/
-	struct Archivo {
-		string nombre;
-		long tam;
-		long long checksum;
-	};
-
-	// Secuencia de archivos
-	typedef sequence <Archivo> archivos;
-};
-
-
 /**
 * Parte cliente, serían los N usuarios que interactuarán, en el inicio de la
 * conexión, con la parte servidora (concretamente, con el Coordinador).
 */
 module cliente {
-	interface Usuario {
+	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
+	struct EstrArchivo {
+		string nombre;
+		long tam;
+		long long checksum;
+		boolean seed;
+	};
 
+	// Secuencia de archivos
+	typedef sequence <EstrArchivo> estrArchivos;
+
+	interface Usuario {
+		string saluda();
 	};
 };
 
 module coordinador {
+	//Definición de array de string
+	typedef sequence <string> vString;
+	
+	// Creado por el coordinador. Mantiene información de los archivos de la red.
+	interface Archivo {
+		readonly attribute string nombre;
+		readonly attribute long tam;
+		readonly attribute long long checksum;
+
+		void insertarSeed(in long id,in  string ref);
+		void insertarPeer(in long id,in  string ref);
+		void eliminarSeed(in long id);
+		void eliminarPeer(in long id);
+		vString getSeeds();
+		vString getPeers();
+	};
+
+
 	interface Coordinador{
-		void login(in archivo::archivos as);
-		void muestra();
+		long conectar(in cliente::estrArchivos eas, in string usuario);
+		void desconectar(in cliente::estrArchivos eas, in long idUsuario);
+		void anyadirArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		void eliminarArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		Archivo buscar(in string nombre);
 	};
 };
+
+
+
