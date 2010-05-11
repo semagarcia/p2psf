@@ -2,6 +2,8 @@ package coordinador;
 
 import java.util.Collection;
 import java.util.Hashtable;
+
+import middleware.Middleware;
 import cliente.EstrArchivo;
 
 public class CoordinadorImpl extends CoordinadorPOA {
@@ -16,9 +18,9 @@ public class CoordinadorImpl extends CoordinadorPOA {
 		
 		try {
 			ArchivoImpl sirviente=new ArchivoImpl(ea.nombre, 0,0);
-			
-			org.omg.CORBA.Object obj=_poa().servant_to_reference(sirviente);
-			resultado=ArchivoHelper.narrow(obj);
+
+			Middleware.registrar(sirviente);
+			resultado=(Archivo) Middleware.interfazSirviente(Archivo.class, sirviente);
 			
 			_archivos.put(ea.nombre, resultado);
 		}
@@ -69,6 +71,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 				
 				if(aux.getPeers().length==0 && aux.getSeeds().length==0) {
 					_archivos.remove(aux.nombre());
+					//eliminar referencia en CORBA?????
 					System.out.println("No quedan usuarios con este archivo, archivo eliminado.");
 					}
 			}
