@@ -1,0 +1,3 @@
+#!/bin/bash
+
+java coordinador.CoordinadorServer -ORBInitialPort 2000
