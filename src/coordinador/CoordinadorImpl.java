@@ -17,7 +17,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 		Archivo resultado=null;
 		
 		try {
-			ArchivoImpl sirviente=new ArchivoImpl(ea.nombre, 0,0);
+			ArchivoImpl sirviente=new ArchivoImpl(ea.nombre, ea.tam, ea.checksum);
 
 			Middleware.registrar(sirviente);
 			resultado=(Archivo) Middleware.interfazSirviente(Archivo.class, sirviente);

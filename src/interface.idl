@@ -8,7 +8,7 @@ module cliente {
 	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
 	struct EstrArchivo {
 		string nombre;
-		long tam;
+		long long tam;
 		long long checksum;
 		vLong partes;
 	};
@@ -28,7 +28,7 @@ module coordinador {
 	// Creado por el coordinador. Mantiene información de los archivos de la red.
 	interface Archivo {
 		readonly attribute string nombre;
-		readonly attribute long tam;
+		readonly attribute long long tam;
 		readonly attribute long long checksum;
 
 		void insertarSeed(in long id);
