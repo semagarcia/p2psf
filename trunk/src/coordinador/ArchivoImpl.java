@@ -5,13 +5,13 @@ import java.util.Hashtable;
 
 public class ArchivoImpl extends ArchivoPOA {
 	private String _nombre;
-	private int _tam;
+	private long _tam;
 	private long _checksum;
 	private ArrayList<Integer> _seeds;
 	private ArrayList<Integer> _peers;
 	private Hashtable<Integer, long[]> _partes;
 
-	public ArchivoImpl(String nombre, int tam, long checksum) {
+	public ArchivoImpl(String nombre, long tam, long checksum) {
 		_nombre=nombre;
 		_tam=tam;
 		_checksum=checksum;
@@ -26,7 +26,7 @@ public class ArchivoImpl extends ArchivoPOA {
 	}
 
 	@Override
-	public int tam() {
+	public long tam() {
 		return _tam;
 	}
 
