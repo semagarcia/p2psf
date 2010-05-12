@@ -44,10 +44,10 @@ public class CoordinadorImpl extends CoordinadorPOA {
 				_archivos.put(eas[i].nombre, aux);
 			}
 
-			if(eas[i].seed)
-				aux.insertarSeed(idUsuario, _usuarios.get(idUsuario));
+			if(eas[i].partes[1]==eas[i].tam)
+				aux.insertarSeed(idUsuario);
 			else
-				aux.insertarPeer(idUsuario, _usuarios.get(idUsuario));
+				aux.insertarPeer(idUsuario, eas[i].partes);
 			
 			System.out.println("almacenado.");
 		}
@@ -62,7 +62,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 			Archivo aux=buscar(eas[i].nombre);
 			if(aux!=null) {
-				if(eas[i].seed)
+				if(eas[i].partes[1]==eas[i].tam)
 					aux.eliminarSeed(idUsuario);
 				else
 					aux.eliminarPeer(idUsuario);
@@ -143,6 +143,12 @@ public class CoordinadorImpl extends CoordinadorPOA {
 		
 		mostrarInfoDebug();
 		
+	}
+
+
+	@Override
+	public String getReferencia(int id) {
+		return _usuarios.get(id);
 	}
 
 }

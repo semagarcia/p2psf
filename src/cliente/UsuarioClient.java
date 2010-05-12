@@ -98,6 +98,11 @@ public class UsuarioClient {
 			_id=-1;
 		}
 	}
+
+
+	public String getReferencia(int id) {
+		return _coord.getReferencia(id);
+	}
 }
 
 /*

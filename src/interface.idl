@@ -3,12 +3,14 @@
 * conexión, con la parte servidora (concretamente, con el Coordinador).
 */
 module cliente {
+	typedef sequence <long long> vLong;
+
 	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
 	struct EstrArchivo {
 		string nombre;
 		long tam;
 		long long checksum;
-		boolean seed;
+		vLong partes;
 	};
 
 	// Secuencia de archivos
@@ -20,8 +22,8 @@ module cliente {
 };
 
 module coordinador {
-	//Definición de array de string
-	typedef sequence <string> vString;
+	//Definición de array de int
+	typedef sequence <long> vInt;
 	
 	// Creado por el coordinador. Mantiene información de los archivos de la red.
 	interface Archivo {
@@ -29,12 +31,13 @@ module coordinador {
 		readonly attribute long tam;
 		readonly attribute long long checksum;
 
-		void insertarSeed(in long id,in  string ref);
-		void insertarPeer(in long id,in  string ref);
+		void insertarSeed(in long id);
+		void insertarPeer(in long id, in cliente::vLong partes);
 		void eliminarSeed(in long id);
 		void eliminarPeer(in long id);
-		vString getSeeds();
-		vString getPeers();
+		vInt getSeeds();
+		vInt getPeers();
+		cliente::vLong getPartes(in long id);
 	};
 
 
@@ -44,6 +47,7 @@ module coordinador {
 		void anyadirArchivos(in cliente::estrArchivos eas, in long idUsuario);
 		void eliminarArchivos(in cliente::estrArchivos eas, in long idUsuario);
 		Archivo buscar(in string nombre);
+		string getReferencia(in long id);
 	};
 };
 

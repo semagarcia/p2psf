@@ -11,23 +11,26 @@ public class Main {
 			
 			//Rellenar informacion de ficheros compartidos para enviar al coordinador
 			EstrArchivo[] vArch=new EstrArchivo[2];
-			vArch[0]=new EstrArchivo("uno",0,0,true);
-			vArch[1]=new EstrArchivo("dos",1,1,true);
+			long[] piezas=new long[2];
+			piezas[0]=0;
+			piezas[1]=0;
+			vArch[0]=new EstrArchivo("uno",0,0,piezas);
+			vArch[1]=new EstrArchivo("dos",1,1,piezas);
 			cliente.anyadir(vArch);
 			
 			vArch=new EstrArchivo[1];
-			vArch[0]=new EstrArchivo("dos",0,0,true);
+			vArch[0]=new EstrArchivo("dos",0,0,piezas);
 			cliente.eliminar(vArch);
 
 			vArch=new EstrArchivo[2];
-			vArch[0]=new EstrArchivo("tres",0,0,true);
-			vArch[1]=new EstrArchivo("cuatro",1,1,true);
+			vArch[0]=new EstrArchivo("tres",0,0,piezas);
+			vArch[1]=new EstrArchivo("cuatro",1,1,piezas);
 			cliente.anyadir(vArch);
 			
 			cliente.conectar(args);
 
 			vArch=new EstrArchivo[1];
-			vArch[0]=new EstrArchivo("tres",0,0,true);
+			vArch[0]=new EstrArchivo("tres",0,0,piezas);
 			cliente.eliminar(vArch);
 
 			
@@ -44,7 +47,7 @@ public class Main {
 				
 				Archivo a=cliente.buscar("uno");
 				if(a!=null) {
-					String uCad=a.getSeeds()[0];
+					String uCad=cliente.getReferencia(a.getSeeds()[0]);
 					Usuario usu=(Usuario) Middleware.interfazSirviente(Usuario.class, uCad);
 					
 					System.out.println(usu.saluda());
