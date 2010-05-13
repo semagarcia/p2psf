@@ -5,8 +5,8 @@ import middleware.Middleware;
 import middleware.MiddlewareException;
 
 public class UsuarioServer extends Thread {
-		
-	private Object _usuImpl;
+
+	private UsuarioImpl _usuImpl;
 
 	public UsuarioServer(String[] args) {
 		try {
@@ -16,13 +16,19 @@ public class UsuarioServer extends Thread {
 			Middleware.inicializar(middleware);
 
 			// Crear el Sirviente
-			_usuImpl = new UsuarioImpl();
+			_usuImpl= new UsuarioImpl();
+	
+			
+	//Establece un valor de prueba para comprobar que es un sirviente distinto		
+	_usuImpl.set();
 
+			
+			
+			
 			// Obtener una referencia CORBA del Sirviente
-			Object ref = Middleware.interfazSirviente(Usuario.class,
-					_usuImpl);
+			Object ref = Middleware.interfazSirviente(Usuario.class,_usuImpl);
 
-			// Añadir la referencia CORBA al servidor de nombres
+			// A�adir la referencia CORBA al servidor de nombres
 			Middleware.servidorNombres().anotarSirviente(ref, "usuario");
 		}
 
@@ -41,7 +47,5 @@ public class UsuarioServer extends Thread {
 	public void run() {
 		System.out.println("Usuario a la escucha...");
 		Middleware.ejecutar();
-		
-		System.out.println("Usuario sale ...");
 	}
 }

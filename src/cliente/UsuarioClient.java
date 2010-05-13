@@ -99,8 +99,9 @@ public class UsuarioClient {
 		}
 	}
 
-
-	public String getReferencia(int id) {
-		return _coord.getReferencia(id);
+	public void descargar(Archivo arch, long[] partes, int numConex, long tamPieza) {
+		//lanza el hilo de descarga para el archivo
+		Downloader d=new Downloader(arch, partes, numConex, tamPieza, _coord);
+		d.start();
 	}
 }

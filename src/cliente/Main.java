@@ -10,29 +10,7 @@ public class Main {
 			UsuarioClient cliente=new UsuarioClient(args);
 			
 			//Rellenar informacion de ficheros compartidos para enviar al coordinador
-/*			EstrArchivo[] vArch=new EstrArchivo[2];
-			long[] piezas=new long[2];
-			piezas[0]=0;
-			piezas[1]=0;
-			vArch[0]=new EstrArchivo("uno",0,0,piezas);
-			vArch[1]=new EstrArchivo("dos",1,1,piezas);
-			cliente.anyadir(vArch);
-			
-			vArch=new EstrArchivo[1];
-			vArch[0]=new EstrArchivo("dos",0,0,piezas);
-			cliente.eliminar(vArch);
 
-			vArch=new EstrArchivo[2];
-			vArch[0]=new EstrArchivo("tres",0,0,piezas);
-			vArch[1]=new EstrArchivo("cuatro",1,1,piezas);
-			cliente.anyadir(vArch);
-			
-			cliente.conectar(args);
-
-			vArch=new EstrArchivo[1];
-			vArch[0]=new EstrArchivo("tres",0,0,piezas);
-			cliente.eliminar(vArch);
-*/
 			
 			
 			//simulando escuchas y peticiones
@@ -43,8 +21,12 @@ public class Main {
 				//añade archivos
 				EstrArchivo[] vArch=new EstrArchivo[2];
 				long[] piezas=new long[2];
-				piezas[0]=0;
-				piezas[1]=100;
+
+				//simula tener parte del archivo
+				long a=(long)Math.ceil(r.nextFloat()*100), b=(long)Math.ceil(r.nextFloat()*100);
+				piezas[0]=Math.min(a, b);
+				piezas[1]=Math.max(a, b);
+				System.out.println(piezas[0]+"-"+piezas[1]);
 				vArch[0]=new EstrArchivo("uno",100,0,piezas);
 				vArch[1]=new EstrArchivo("dos",100,0,piezas);
 				cliente.anyadir(vArch);
@@ -53,7 +35,7 @@ public class Main {
 				cliente.conectar(args);
 			
 				// Espera para probar interacciones con el servidor
-				Thread.sleep(10000);
+				Thread.sleep(100000);
 			}
 			else {
 				System.out.println("Usuario que hace peticiones");
@@ -74,17 +56,8 @@ public class Main {
 				piezas[5]=95;
 				
 
-				if(a!=null) {
-					//lanza el hilo de descarga para el archivo
-					Downloader d=new Downloader(a, piezas, 10, 10);
-					d.start();
-					/*
-					String uCad=cliente.getReferencia(a.getSeeds()[0]);
-					Usuario usu=(Usuario) Middleware.interfazSirviente(Usuario.class, uCad);
-					
-					System.out.println(usu.saluda());
-					*/
-				}
+				if(a!=null)
+					cliente.descargar(a, piezas, 2, 10);
 				else
 					System.out.println("El archivo no está o no estas conectado.");
 			}
@@ -92,8 +65,8 @@ public class Main {
 		}
 		catch (MiddlewareException e1) {
 			e1.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		}
+		catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
