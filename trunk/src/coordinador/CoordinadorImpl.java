@@ -44,7 +44,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 				_archivos.put(eas[i].nombre, aux);
 			}
 
-			if(eas[i].partes[1]==eas[i].tam)
+			if((eas[i].partes[1]-eas[i].partes[0])==eas[i].tam)
 				aux.insertarSeed(idUsuario);
 			else
 				aux.insertarPeer(idUsuario, eas[i].partes);
@@ -62,7 +62,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 			Archivo aux=buscar(eas[i].nombre);
 			if(aux!=null) {
-				if(eas[i].partes[1]==eas[i].tam)
+				if(eas[i].partes[1]-eas[i].partes[0]==eas[i].tam)
 					aux.eliminarSeed(idUsuario);
 				else
 					aux.eliminarPeer(idUsuario);
@@ -147,7 +147,11 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 
 	@Override
-	public String getReferencia(int id) {
+	public String getReferencia(int id) {		
+		Collection<String> col=_usuarios.values();
+		String[] str=new String[col.size()];
+		col.toArray(str);
+
 		return _usuarios.get(id);
 	}
 
