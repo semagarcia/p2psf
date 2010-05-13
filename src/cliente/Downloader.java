@@ -9,14 +9,15 @@ import coordinador.Coordinador;
 public class Downloader extends Thread {
 	private Archivo _arch;
 	private long _tamPieza;
+	private final String _ruta;
 	private ArrayList<long[]> _descargar;
 	private Coordinador _coord;
 	private boolean[] _pedidos;  //true si la _descarga[i] ha sido solicitada
 	private boolean[] _peersSolicitados;  //true si existe un hilo pidiendole al peer[i]
 	private boolean[] _seedsSolicitados;  //true si existe un hilo pidiendole al seed[i]
 	private Semaforo _lanzados;
+	private Semaforo _escribir;
 	
-
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
 	private void anotarDescarga(long inicio, long fin) {
@@ -112,7 +113,7 @@ public class Downloader extends Thread {
 		_lanzados.bajar();
 		
 		try {
-			p=new Peticion(_coord.getReferencia(idUsuario), pieza[0], pieza[1],_lanzados);
+			p=new Peticion(_ruta,_coord.getReferencia(idUsuario), _arch.nombre(), pieza[0], pieza[1],_lanzados,_escribir);
 			p.start();
 		}
 		catch (MiddlewareException e) {
@@ -124,11 +125,13 @@ public class Downloader extends Thread {
 
 	
 	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
-	public Downloader(Archivo arch, long[] partes, int numConex, long tamPieza, Coordinador coord) {
+	public Downloader(Archivo arch, long[] partes, int numConex, long tamPieza, String ruta, Coordinador coord) {
 		super();
 		_arch=arch;
 		_lanzados=new Semaforo(numConex);
+		_escribir=new Semaforo(1);
 		_tamPieza=tamPieza;
+		_ruta=ruta;
 		_descargar=new ArrayList<long[]>();
 		_coord=coord;
 		

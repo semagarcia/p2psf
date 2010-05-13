@@ -1,5 +1,7 @@
 package cliente;
 
+import java.util.Hashtable;
+
 import middleware.JavaORB;
 import middleware.Middleware;
 import middleware.MiddlewareException;
@@ -8,7 +10,7 @@ public class UsuarioServer extends Thread {
 
 	private UsuarioImpl _usuImpl;
 
-	public UsuarioServer(String[] args) {
+	public UsuarioServer(String[] args, Hashtable eas) {
 		try {
 			// Inicialiación del ORB
 			JavaORB middleware = new JavaORB();
@@ -16,19 +18,14 @@ public class UsuarioServer extends Thread {
 			Middleware.inicializar(middleware);
 
 			// Crear el Sirviente
-			_usuImpl= new UsuarioImpl();
-	
+			_usuImpl= new UsuarioImpl(eas);
 			
-	//Establece un valor de prueba para comprobar que es un sirviente distinto		
-	_usuImpl.set();
-
-			
-			
-			
+_usuImpl.set();
+				
 			// Obtener una referencia CORBA del Sirviente
 			Object ref = Middleware.interfazSirviente(Usuario.class,_usuImpl);
 
-			// A�adir la referencia CORBA al servidor de nombres
+			// Añadir la referencia CORBA al servidor de nombres
 			Middleware.servidorNombres().anotarSirviente(ref, "usuario");
 		}
 
