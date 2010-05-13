@@ -1,7 +1,7 @@
 package cliente;
 
+import java.io.File;
 import coordinador.Archivo;
-import middleware.Middleware;
 import middleware.MiddlewareException;
 
 public class Main {		
@@ -18,6 +18,7 @@ public class Main {
 			if(r.nextBoolean()) {
 				System.out.println("Usuario que solo escucha");
 
+				/*
 				//añade archivos
 				EstrArchivo[] vArch=new EstrArchivo[2];
 				long[] piezas=new long[2];
@@ -29,6 +30,19 @@ public class Main {
 				System.out.println(piezas[0]+"-"+piezas[1]);
 				vArch[0]=new EstrArchivo("uno",100,0,piezas);
 				vArch[1]=new EstrArchivo("dos",100,0,piezas);
+				cliente.anyadir(vArch);
+				*/
+				
+				EstrArchivo[] vArch=new EstrArchivo[1];
+				long[] piezas=new long[2];
+
+				File f=new File("pdf.pdf");
+				
+				//simula tener parte del archivo
+				piezas[0]=0;
+				piezas[1]=f.length();
+				System.out.println(f.getName()+": "+piezas[0]+"-"+piezas[1]);
+				vArch[0]=new EstrArchivo(f.getAbsolutePath(),f.getName(),f.length(),0,piezas);
 				cliente.anyadir(vArch);
 				
 				//se conecta
@@ -44,8 +58,9 @@ public class Main {
 				cliente.conectar(args);
 				
 				//busca el archivo a descargar
-				Archivo a=cliente.buscar("uno");
+				Archivo a=cliente.buscar("pdf.pdf");
 
+				/*
 				//simulamos que el usuario tiene una parte del archivo a descargar
 				long[] piezas=new long[6];
 				piezas[0]=5;
@@ -54,10 +69,12 @@ public class Main {
 				piezas[3]=65;
 				piezas[4]=90;
 				piezas[5]=95;
+				*/
 				
+				long[] piezas=null;
 
 				if(a!=null)
-					cliente.descargar(a, piezas, 2, 10);
+					cliente.descargar(a, piezas, 2, 10000, "/home/fran/Escritorio/copia.pdf");
 				else
 					System.out.println("El archivo no está o no estas conectado.");
 			}

@@ -67,7 +67,7 @@ public class UsuarioClient {
 	
 	public void conectar(String[] args) throws MiddlewareException {
 		// Crea el hilo de escucha
-		_hiloServer=new UsuarioServer(args);
+		_hiloServer=new UsuarioServer(args, _eas);
 		_hiloServer.start();
 
 		Collection<EstrArchivo> col=_eas.values();
@@ -99,9 +99,9 @@ public class UsuarioClient {
 		}
 	}
 
-	public void descargar(Archivo arch, long[] partes, int numConex, long tamPieza) {
+	public void descargar(Archivo arch, long[] partes, int numConex, long tamPieza, String ruta) {
 		//lanza el hilo de descarga para el archivo
-		Downloader d=new Downloader(arch, partes, numConex, tamPieza, _coord);
+		Downloader d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord);
 		d.start();
 	}
 }
