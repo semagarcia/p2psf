@@ -34,8 +34,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         initComponents();
 
         // Otras inicializaciones
-        //loaderBuscando.setVisible(false);
-        panelNuevaBusqueda.remove(loaderBuscando);
+        loaderBuscando.setVisible(false);
+        //panelNuevaBusqueda.remove(loaderBuscando);
 
          hilo = new Buscando(loaderBuscando, panelNuevaBusqueda);
          w = new Worker(loaderBuscando);
@@ -677,9 +677,11 @@ public class ClienteP2P extends javax.swing.JFrame {
 
     private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonBuscarActionPerformed
         // Cuando se pulse en el botón de buscar
-        //hilo.start();
-
+        
         //loaderBuscando.revalidate();
+        loaderBuscando.setVisible(true);
+        hilo.start();
+
         //loaderBuscando.repaint();
         //this.repaint();
         
@@ -687,16 +689,18 @@ public class ClienteP2P extends javax.swing.JFrame {
 
         
         // Simulación de la búsqueda de archivos
-        /*try {
+/*        try {
             java.lang.Thread.sleep(5000);
         } catch (InterruptedException ex) {
             System.out.println("Excepcion: " + ex.toString());
-        }*/
-        for(int i=0; i<10000; i++)
+        }
+        */
+/*        for(int i=0; i<10000; i++)
            System.out.println("Wueeeeeeeeeeeeeeeeeeee");
         System.out.println("------------------------------");
-        
-        hilo.parar();
+  */      
+    //    hilo.parar();
+//        loaderBuscando.setVisible(false);
     }//GEN-LAST:event_botonBuscarActionPerformed
 
     private void anyadirRecursoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_anyadirRecursoMouseClicked

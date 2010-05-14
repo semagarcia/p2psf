@@ -30,7 +30,7 @@ public class UsuarioImpl extends UsuarioPOA {
 	public byte[] solicitarParte(String nombre, long inicio, long fin) {
 		System.out.println("Soy "+_prueba+", me han pedido "+nombre+"["+inicio+"-"+fin+"]");
 
-		File fichero=new File(_eas.get(nombre).ruta);
+		File fichero=new File(_eas.get(nombre).info.ruta);
 		int tam=(int)(fin-inicio);
 		byte[] b=null;
 		RandomAccessFile fileIn;

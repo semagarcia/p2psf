@@ -44,8 +44,8 @@ public class UsuarioClient {
 		ArrayList<EstrArchivo> aux=new ArrayList<EstrArchivo>();
 		
 		for(int i=0;i<eas.length;i++) {
-			if(_eas.get(eas[i].nombre)==null) {
-				_eas.put(eas[i].nombre, eas[i]);
+			if(_eas.get(eas[i].info.nombre)==null) {
+				_eas.put(eas[i].info.nombre, eas[i]);
 				aux.add(eas[i]);
 			}
 		}
@@ -57,7 +57,7 @@ public class UsuarioClient {
 	
 	public void eliminar(EstrArchivo[] eas) {	
 		for(int i=0;i<eas.length;i++) {
-			_eas.remove(eas[i].nombre);
+			_eas.remove(eas[i].info.nombre);
 		}
 
 		if(_id!=-1)
@@ -99,7 +99,7 @@ public class UsuarioClient {
 		}
 	}
 
-	public void descargar(Archivo arch, long[] partes, int numConex, long tamPieza, String ruta) {
+	public void descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta) {
 		//lanza el hilo de descarga para el archivo
 		Downloader d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord);
 		d.start();

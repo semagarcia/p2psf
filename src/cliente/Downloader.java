@@ -10,7 +10,7 @@ public class Downloader extends Thread {
 	private Archivo _arch;
 	private long _tamPieza;
 	private final String _ruta;
-	private ArrayList<long[]> _descargar;
+	private ArrayList<parteArchivo> _descargar;
 	private Coordinador _coord;
 	private boolean[] _pedidos;  //true si la _descarga[i] ha sido solicitada
 	private boolean[] _peersSolicitados;  //true si existe un hilo pidiendole al peer[i]
@@ -22,44 +22,40 @@ public class Downloader extends Thread {
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
 	private void anotarDescarga(long inicio, long fin) {
 		long finActual=inicio+_tamPieza;
-		long[] aux;
+		parteArchivo aux;
 
 		while(finActual<fin) {
-			aux=new long[2];
-			aux[0]=inicio;
-			aux[1]=finActual;
+			aux=new parteArchivo(inicio,finActual);
 			_descargar.add(aux);
 			inicio=finActual;
 			finActual+=_tamPieza;
 		}
 		
-		aux=new long[2];
-		aux[0]=inicio;
-		aux[1]=fin;
+		aux=new parteArchivo(inicio,fin);
 		_descargar.add(aux);
 	}
 	
 	
 	
 	// Anota las partes a descargar
-	private void calcularDescargas(long[] partes) {
+	private void calcularDescargas(parteArchivo[] partes) {
 		long inicioActual=0;
 		boolean descartar=(partes!=null);
 		int i=0;
 		
 		while(descartar) {
 			//Descartar partes
-			if(inicioActual<partes[i]) {
+			if(inicioActual<partes[i].inicio) {
 				//Añadir desde inicioActual hasta partes[i]
-				anotarDescarga(inicioActual,partes[i]);
-				inicioActual=partes[i+1];
-				i+=2;
+				anotarDescarga(inicioActual,partes[i].inicio);
+				inicioActual=partes[i].fin;
+				i++;
 				if(i>=partes.length) descartar=false;
 			}
 			else {
 				//Descartar desde _partes[i] hasta _partes[i+1]
-				inicioActual=partes[i+1];
-				i+=2;
+				inicioActual=partes[i].fin;
+				i++;
 				if(i>=partes.length) descartar=false;
 			}
 		}
@@ -76,17 +72,17 @@ public class Downloader extends Thread {
 
 	private boolean buscarPieza(int indicePeer, int indiceDescarga) {
 		boolean aux=false;
-		long[] pieza=_descargar.get(indiceDescarga);
-		long[] piezasPeer=_arch.getPartes(indicePeer);
+		parteArchivo pieza=_descargar.get(indiceDescarga);
+		parteArchivo[] piezasPeer=_arch.getPartes(indicePeer);
 		int i=0;
 		
 		boolean encontradoSuperior=false;
-		while(!encontradoSuperior && i+1<piezasPeer.length)
-			if(pieza[1]>piezasPeer[i+1]) encontradoSuperior=true;
-			else i+=2;
+		while(!encontradoSuperior && i<piezasPeer.length)
+			if(pieza.fin>piezasPeer[i].fin) encontradoSuperior=true;
+			else i++;
 		
 		if(i<piezasPeer.length)
-			if(pieza[0]>=piezasPeer[i])
+			if(pieza.inicio>=piezasPeer[i].inicio)
 				aux=true;
 		
 		return aux;
@@ -107,13 +103,13 @@ public class Downloader extends Thread {
 	}
 	
 	
-	private Peticion lanzarHilo(int idUsuario, long[] pieza) {
+	private Peticion lanzarHilo(int idUsuario, parteArchivo pieza) {
 		Peticion p=null;
 		
 		_lanzados.bajar();
 		
 		try {
-			p=new Peticion(_ruta,_coord.getReferencia(idUsuario), _arch.nombre(), pieza[0], pieza[1],_lanzados,_escribir);
+			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), pieza,_lanzados,_escribir);
 			p.start();
 		}
 		catch (MiddlewareException e) {
@@ -125,14 +121,14 @@ public class Downloader extends Thread {
 
 	
 	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
-	public Downloader(Archivo arch, long[] partes, int numConex, long tamPieza, String ruta, Coordinador coord) {
+	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord) {
 		super();
 		_arch=arch;
 		_lanzados=new Semaforo(numConex);
 		_escribir=new Semaforo(1);
 		_tamPieza=tamPieza;
 		_ruta=ruta;
-		_descargar=new ArrayList<long[]>();
+		_descargar=new ArrayList<parteArchivo>();
 		_coord=coord;
 		
 		calcularDescargas(partes);
@@ -141,7 +137,7 @@ public class Downloader extends Thread {
 
 	// Comienza a descargar el archivo lanzando un hilo por cada petición.
 	public void run() {
-		long[] aux;
+		parteArchivo aux;
 		int[] seeds=_arch.getSeeds();
 		int[] peers=_arch.getPeers();
 		_peersSolicitados=new boolean[peers.length];
@@ -153,7 +149,7 @@ public class Downloader extends Thread {
 		System.out.println("Hay que descargar las siguientes piezas: ");
 		for(int i=0;i<_descargar.size();i++) {
 			aux=_descargar.get(i);
-			System.out.println(aux[0]+"-"+aux[1]+":"+i);
+			System.out.println(aux.inicio+"-"+aux.fin+":"+i);
 		}
 		System.out.println("Conexiones: "+_lanzados.getInicial()+", Usuarios: "+(seeds.length+peers.length));
 		
@@ -168,7 +164,7 @@ public class Downloader extends Thread {
 			while(!_pedidos[i] && j<peers.length) {
 				if(!_peersSolicitados[j]) {
 					if(buscarPieza(peers[j],i)) {
-						System.out.println("peers["+j+"]:"+_descargar.get(i)[0]+"-"+_descargar.get(i)[1]);
+						System.out.println("peers["+j+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
 						_pedidos[i]=true;
 						_peersSolicitados[j]=true;
 						ultimoHilo=lanzarHilo(peers[j],_descargar.get(i));
@@ -185,7 +181,7 @@ public class Downloader extends Thread {
 				while(!_pedidos[i] && j<seeds.length)
 					if(_seedsSolicitados[j]) j++;
 					else {
-						System.out.println("seeds["+j+"]:"+_descargar.get(i)[0]+"-"+_descargar.get(i)[1]);
+						System.out.println("seeds["+j+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
 						_pedidos[i]=true;
 						_seedsSolicitados[j]=true;
 						ultimoHilo=lanzarHilo(seeds[j],_descargar.get(i));
