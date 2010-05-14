@@ -36,8 +36,9 @@ _usuImpl.set();
 	}
 	
 	
-	public String getRef() throws MiddlewareException {		
-		return Middleware.referenciaCadenificada(_usuImpl);
+	public Usuario getRef() throws MiddlewareException {		
+		return (Usuario) Middleware.interfazSirviente(Usuario.class, _usuImpl); 
+		//(Usuario)_usuImpl;
 	}
 	
 	

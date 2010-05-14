@@ -21,11 +21,16 @@ public class Buscando extends Thread {
     }
 
     public void run() {
-        panel.add(barraProgreso);
-        
-        barraProgreso.setVisible(true);
-        barraProgreso.revalidate();
-        barraProgreso.repaint();
+//        panel.add(barraProgreso);
+    try {
+		Thread.sleep(10000);
+	} catch (InterruptedException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}    
+        barraProgreso.setVisible(false);
+//        barraProgreso.revalidate();
+  //      barraProgreso.repaint();
     }
 
     public void parar() {

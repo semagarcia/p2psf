@@ -3,16 +3,28 @@
 * conexión, con la parte servidora (concretamente, con el Coordinador).
 */
 module cliente {
-	typedef sequence <long long> vLong;
+	//typedef sequence <long long> vLong;
 
-	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
-	struct EstrArchivo {
-		string ruta;
+	struct infoArchivo {
+		string ruta;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
 		string nombre;
 		long long tam;
 		long long checksum;
-		vLong partes;
 	};
+
+	struct parteArchivo {
+		long long inicio;
+		long long fin;
+	};
+
+	typedef sequence <parteArchivo> vPartes;
+
+	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
+	struct EstrArchivo {
+		infoArchivo info;
+		vPartes partes;
+	};
+
 
 	// Secuencia de archivos
 	typedef sequence <EstrArchivo> estrArchivos;
@@ -36,22 +48,22 @@ module coordinador {
 		readonly attribute long long checksum;
 
 		void insertarSeed(in long id);
-		void insertarPeer(in long id, in cliente::vLong partes);
+		void insertarPeer(in long id, in cliente::vPartes partes);
 		void eliminarSeed(in long id);
 		void eliminarPeer(in long id);
 		vInt getSeeds();
 		vInt getPeers();
-		cliente::vLong getPartes(in long id);
+		cliente::vPartes getPartes(in long id);
 	};
 
 
 	interface Coordinador{
-		long conectar(in cliente::estrArchivos eas, in string usuario);
+		long conectar(in cliente::estrArchivos eas, in cliente::Usuario usuario);
 		void desconectar(in cliente::estrArchivos eas, in long idUsuario);
 		void anyadirArchivos(in cliente::estrArchivos eas, in long idUsuario);
 		void eliminarArchivos(in cliente::estrArchivos eas, in long idUsuario);
 		Archivo buscar(in string nombre);
-		string getReferencia(in long id);
+		cliente::Usuario getUsuario(in long id);
 	};
 };
 

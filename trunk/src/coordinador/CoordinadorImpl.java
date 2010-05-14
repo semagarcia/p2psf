@@ -4,10 +4,12 @@ import java.util.Collection;
 import java.util.Hashtable;
 
 import middleware.Middleware;
+import middleware.MiddlewareException;
 import cliente.EstrArchivo;
+import cliente.Usuario;
 
 public class CoordinadorImpl extends CoordinadorPOA {
-	private Hashtable<Integer, String> _usuarios;
+	private Hashtable<Integer, Usuario> _usuarios;
 	private Hashtable<String, Archivo> _archivos;
 	private int _idActual;
 	
@@ -17,12 +19,12 @@ public class CoordinadorImpl extends CoordinadorPOA {
 		Archivo resultado=null;
 		
 		try {
-			ArchivoImpl sirviente=new ArchivoImpl(ea.nombre, ea.tam, ea.checksum);
+			ArchivoImpl sirviente=new ArchivoImpl(ea.info.nombre, ea.info.tam, ea.info.checksum);
 
 			Middleware.registrar(sirviente);
 			resultado=(Archivo) Middleware.interfazSirviente(Archivo.class, sirviente);
 			
-			_archivos.put(ea.nombre, resultado);
+			_archivos.put(ea.info.nombre, resultado);
 		}
 		catch (Exception e) {
 			System.out.println(e.getLocalizedMessage());
@@ -36,15 +38,15 @@ public class CoordinadorImpl extends CoordinadorPOA {
 	public void anyadirArchivos(EstrArchivo[] eas, int idUsuario) {
 		System.out.println("El usuario dispone de "+eas.length+" archivos.");
 		for(int i=0;i<eas.length;i++) {
-			System.out.print("Archivo "+i+": "+eas[i].nombre+", "+eas[i].tam+" bytes, "+eas[i].checksum+"...");
+			System.out.print("Archivo "+i+": "+eas[i].info.nombre+", "+eas[i].info.tam+" bytes, "+eas[i].info.checksum+"...");
 
-			Archivo aux=buscar(eas[i].nombre);
+			Archivo aux=buscar(eas[i].info.nombre);
 			if(aux==null) {
 				aux=crearArchivo(eas[i]);
-				_archivos.put(eas[i].nombre, aux);
+				_archivos.put(eas[i].info.nombre, aux);
 			}
 
-			if((eas[i].partes[1]-eas[i].partes[0])==eas[i].tam)
+			if((eas[i].partes[0].fin-eas[i].partes[0].inicio)==eas[i].info.tam)
 				aux.insertarSeed(idUsuario);
 			else
 				aux.insertarPeer(idUsuario, eas[i].partes);
@@ -58,11 +60,11 @@ public class CoordinadorImpl extends CoordinadorPOA {
 	public void eliminarArchivos(EstrArchivo[] eas, int idUsuario) {
 		System.out.println("El usuario dispone de "+eas.length+" archivos.");
 		for(int i=0;i<eas.length;i++) {
-			System.out.print("Archivo "+i+": "+eas[i].nombre+", "+eas[i].tam+" bytes, "+eas[i].checksum+"...");
+			System.out.print("Archivo "+i+": "+eas[i].info.nombre+", "+eas[i].info.tam+" bytes, "+eas[i].info.checksum+"...");
 
-			Archivo aux=buscar(eas[i].nombre);
+			Archivo aux=buscar(eas[i].info.nombre);
 			if(aux!=null) {
-				if(eas[i].partes[1]-eas[i].partes[0]==eas[i].tam)
+				if(eas[i].partes[0].fin-eas[i].partes[0].inicio==eas[i].info.tam)
 					aux.eliminarSeed(idUsuario);
 				else
 					aux.eliminarPeer(idUsuario);
@@ -71,7 +73,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 				
 				if(aux.getPeers().length==0 && aux.getSeeds().length==0) {
 					_archivos.remove(aux.nombre());
-					//eliminar referencia en CORBA?????
+//eliminar referencia en CORBA
 					System.out.println("No quedan usuarios con este archivo, archivo eliminado.");
 					}
 			}
@@ -81,7 +83,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 	// Inicializa la tabla de usuarios y archivos. Inicializa los identificadores a 0.
 	public CoordinadorImpl() {
-		_usuarios=new Hashtable<Integer, String>();
+		_usuarios=new Hashtable<Integer, Usuario>();
 		_archivos=new Hashtable<String, Archivo>();
 		_idActual=0;
 	}
@@ -89,7 +91,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 	// Almacena la información del usuario que entra y los archivos que comparte.
 	@Override
-	public int conectar(EstrArchivo[] eas, String usuario) {
+	public int conectar(EstrArchivo[] eas, cliente.Usuario usuario) {
 		// Almacena la información del usuario
 		_idActual++;		
 		_usuarios.put(_idActual, usuario);
@@ -147,11 +149,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 
 	@Override
-	public String getReferencia(int id) {		
-		Collection<String> col=_usuarios.values();
-		String[] str=new String[col.size()];
-		col.toArray(str);
-
+	public Usuario getUsuario(int id) {
 		return _usuarios.get(id);
 	}
 

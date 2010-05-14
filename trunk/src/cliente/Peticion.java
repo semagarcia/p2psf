@@ -2,7 +2,6 @@ package cliente;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import middleware.Middleware;
 import middleware.MiddlewareException;
 
 public class Peticion extends Thread {
@@ -34,12 +33,12 @@ public class Peticion extends Thread {
 	}
 
 	
-	public Peticion(String ruta, String referenciaUsuario, String nombre ,long inicio, long fin, Semaforo lanzados, Semaforo escribir) throws MiddlewareException {
+	public Peticion(String ruta, Usuario usu, String nombre , parteArchivo pieza, Semaforo lanzados, Semaforo escribir) throws MiddlewareException {
 		_ruta=ruta;
-		_usuario=(Usuario) Middleware.interfazSirviente(Usuario.class, referenciaUsuario);
+		_usuario=usu;
 		_nombre=nombre;
-		_inicio=inicio;
-		_fin=fin;
+		_inicio=pieza.inicio;
+		_fin=pieza.fin;
 		_lanzados=lanzados;
 		_escribir=escribir;
 	}

@@ -9,7 +9,7 @@ public class ArchivoImpl extends ArchivoPOA {
 	private long _checksum;
 	private ArrayList<Integer> _seeds;
 	private ArrayList<Integer> _peers;
-	private Hashtable<Integer, long[]> _partes;
+	private Hashtable<Integer, cliente.parteArchivo[]> _partes;
 
 	public ArchivoImpl(String nombre, long tam, long checksum) {
 		_nombre=nombre;
@@ -17,7 +17,7 @@ public class ArchivoImpl extends ArchivoPOA {
 		_checksum=checksum;
 		_seeds=new ArrayList<Integer>();
 		_peers=new ArrayList<Integer>();
-		_partes=new Hashtable<Integer, long[]>();
+		_partes=new Hashtable<Integer, cliente.parteArchivo[]>();
 	}
 	
 	@Override
@@ -60,7 +60,7 @@ public class ArchivoImpl extends ArchivoPOA {
 	}
 
 	@Override
-	public void insertarPeer(int id, long[] partes) {
+	public void insertarPeer(int id, cliente.parteArchivo[] partes) {
 		_peers.add(id);
 		_partes.put(id, partes);
 	}
@@ -91,7 +91,7 @@ public class ArchivoImpl extends ArchivoPOA {
 	}
 
 	@Override
-	public long[] getPartes(int id) {
+	public cliente.parteArchivo[] getPartes(int id) {
 		return _partes.get(id);
 	}
 }

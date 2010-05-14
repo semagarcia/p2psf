@@ -34,22 +34,27 @@ public class Main {
 				*/
 				
 				EstrArchivo[] vArch=new EstrArchivo[1];
-				long[] piezas=new long[2];
+				infoArchivo info=new infoArchivo();
+				parteArchivo[] piezas=new parteArchivo[1];
+				piezas[0]=new parteArchivo();
 
 				File f=new File("pdf.pdf");
 				
-				//simula tener parte del archivo
-				piezas[0]=0;
-				piezas[1]=f.length();
-				System.out.println(f.getName()+": "+piezas[0]+"-"+piezas[1]);
-				vArch[0]=new EstrArchivo(f.getAbsolutePath(),f.getName(),f.length(),0,piezas);
+				info.ruta=f.getAbsolutePath();
+				info.nombre=f.getName();
+				info.tam=f.length();
+				info.checksum=0;
+				piezas[0].inicio=0;
+				piezas[0].fin=f.length();
+				System.out.println(f.getName()+": "+piezas[0].inicio+"-"+piezas[0].fin);
+				vArch[0]=new EstrArchivo(info,piezas);
 				cliente.anyadir(vArch);
 				
 				//se conecta
 				cliente.conectar(args);
 			
 				// Espera para probar interacciones con el servidor
-				Thread.sleep(100000);
+				Thread.sleep(1000);
 			}
 			else {
 				System.out.println("Usuario que hace peticiones");
@@ -71,7 +76,7 @@ public class Main {
 				piezas[5]=95;
 				*/
 				
-				long[] piezas=null;
+				parteArchivo[] piezas=null;
 
 				if(a!=null)
 					cliente.descargar(a, piezas, 2, 10000, "/home/fran/Escritorio/copia.pdf");
