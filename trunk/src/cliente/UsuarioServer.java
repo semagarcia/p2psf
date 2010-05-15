@@ -10,7 +10,7 @@ public class UsuarioServer extends Thread {
 
 	private UsuarioImpl _usuImpl;
 
-	public UsuarioServer(String[] args, Hashtable eas) {
+	public UsuarioServer(String[] args, Hashtable eas, Semaforo accederEas) {
 		try {
 			// Inicialiación del ORB
 			JavaORB middleware = new JavaORB();
@@ -18,7 +18,7 @@ public class UsuarioServer extends Thread {
 			Middleware.inicializar(middleware);
 
 			// Crear el Sirviente
-			_usuImpl= new UsuarioImpl(eas);
+			_usuImpl= new UsuarioImpl(eas, accederEas);
 			
 _usuImpl.set();
 				

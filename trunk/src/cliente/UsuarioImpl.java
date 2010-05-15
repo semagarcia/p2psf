@@ -8,11 +8,13 @@ public class UsuarioImpl extends UsuarioPOA {
 	
 	private float _prueba;
 	private Hashtable<String, EstrArchivo> _eas;
+	private Semaforo _accederEas;
 	
 	
-	public UsuarioImpl(Hashtable<String, EstrArchivo> eas) {
+	public UsuarioImpl(Hashtable<String, EstrArchivo> eas, Semaforo accederEas) {
 		super();
 		_eas=eas;
+		_accederEas=accederEas;
 	}
 	
 	@Override
@@ -28,9 +30,15 @@ public class UsuarioImpl extends UsuarioPOA {
 
 	@Override
 	public byte[] solicitarParte(String nombre, long inicio, long fin) {
+		
+		_accederEas.bajar();
+		
 		System.out.println("Soy "+_prueba+", me han pedido "+nombre+"["+inicio+"-"+fin+"]");
 
 		File fichero=new File(_eas.get(nombre).info.ruta);
+		
+		_accederEas.subir();
+		
 		int tam=(int)(fin-inicio);
 		byte[] b=null;
 		RandomAccessFile fileIn;
@@ -48,7 +56,7 @@ public class UsuarioImpl extends UsuarioPOA {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return b;
 	}
 }

@@ -15,6 +15,8 @@ module cliente {
 	struct parteArchivo {
 		long long inicio;
 		long long fin;
+		boolean pedido;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
+		boolean descargado;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
 	};
 
 	typedef sequence <parteArchivo> vPartes;
@@ -49,6 +51,7 @@ module coordinador {
 
 		void insertarSeed(in long id);
 		void insertarPeer(in long id, in cliente::vPartes partes);
+		void actualizarPartes(in long id, in cliente::vPartes partes);
 		void eliminarSeed(in long id);
 		void eliminarPeer(in long id);
 		vInt getSeeds();

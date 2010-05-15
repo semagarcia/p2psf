@@ -46,6 +46,8 @@ public class Main {
 				info.checksum=0;
 				piezas[0].inicio=0;
 				piezas[0].fin=f.length();
+				piezas[0].pedido=false;
+				piezas[0].descargado=false;
 				System.out.println(f.getName()+": "+piezas[0].inicio+"-"+piezas[0].fin);
 				vArch[0]=new EstrArchivo(info,piezas);
 				cliente.anyadir(vArch);
@@ -54,7 +56,7 @@ public class Main {
 				cliente.conectar(args);
 			
 				// Espera para probar interacciones con el servidor
-				Thread.sleep(1000);
+				Thread.sleep(10000);
 			}
 			else {
 				System.out.println("Usuario que hace peticiones");
@@ -78,8 +80,15 @@ public class Main {
 				
 				parteArchivo[] piezas=null;
 
-				if(a!=null)
+				if(a!=null) {
 					cliente.descargar(a, piezas, 2, 10000, "/home/fran/Escritorio/copia.pdf");
+//Simula la espera a que finalice la descarga y se quede sirviendo.
+//Si no lo hago, no elimina al seed. MIRARLO.
+//El fallo ocurre cuando el usuario llama a la funcion desconectar antes de que termine
+//el hilo de la descarga, el cual está actualizando la informacion del archivo.
+Thread.sleep(10000);
+					System.out.println("USUARIO QUE PEDIA SALE");
+				}
 				else
 					System.out.println("El archivo no está o no estas conectado.");
 			}

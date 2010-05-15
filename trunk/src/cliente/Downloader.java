@@ -1,6 +1,8 @@
 package cliente;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 import middleware.MiddlewareException;
 import coordinador.Archivo;
@@ -12,11 +14,12 @@ public class Downloader extends Thread {
 	private final String _ruta;
 	private ArrayList<parteArchivo> _descargar;
 	private Coordinador _coord;
-	private boolean[] _pedidos;  //true si la _descarga[i] ha sido solicitada
-	private boolean[] _peersSolicitados;  //true si existe un hilo pidiendole al peer[i]
-	private boolean[] _seedsSolicitados;  //true si existe un hilo pidiendole al seed[i]
 	private Semaforo _lanzados;
 	private Semaforo _escribir;
+	private Semaforo _accederEas;
+	private Hashtable<String, EstrArchivo> _eas;
+	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
+	private int _miId;
 	
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
@@ -25,13 +28,13 @@ public class Downloader extends Thread {
 		parteArchivo aux;
 
 		while(finActual<fin) {
-			aux=new parteArchivo(inicio,finActual);
+			aux=new parteArchivo(inicio,finActual,false,false);
 			_descargar.add(aux);
 			inicio=finActual;
 			finActual+=_tamPieza;
 		}
 		
-		aux=new parteArchivo(inicio,fin);
+		aux=new parteArchivo(inicio,fin,false,false);
 		_descargar.add(aux);
 	}
 	
@@ -62,11 +65,6 @@ public class Downloader extends Thread {
 		//Añadir ultima parte del archivo
 		if(inicioActual<_arch.tam())
 			anotarDescarga(inicioActual,_arch.tam());
-		
-		//Inicializa el vector _pedidos
-		_pedidos=new boolean[_descargar.size()];
-		for(i=0; i<_pedidos.length;i++)
-			_pedidos[i]=false;
 	}
 
 
@@ -93,9 +91,10 @@ public class Downloader extends Thread {
 	private boolean pedir() {
 		boolean aux=false;
 		int i=0;
-		
-		while(!aux && i<_pedidos.length) {
-			if(!_pedidos[i]) aux=true;
+
+		// Hay que ejecutarlo en exclusión mutua, ya que podría eliminarse una pieza a descargar
+		while(!aux && i<_descargar.size()) {
+			if(!_descargar.get(i).pedido && !_descargar.get(i).descargado) aux=true;
 			else i++;
 		}
 		
@@ -103,14 +102,11 @@ public class Downloader extends Thread {
 	}
 	
 	
-	private Peticion lanzarHilo(int idUsuario, parteArchivo pieza) {
+	private Peticion crearHilo(int idUsuario, parteArchivo pieza, Hashtable<Integer, Boolean> usuarios) {
 		Peticion p=null;
 		
-		_lanzados.bajar();
-		
 		try {
-			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), pieza,_lanzados,_escribir);
-			p.start();
+			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), _arch.tam(), _arch.checksum(), pieza,_lanzados, _escribir, usuarios, idUsuario, _miId, _accederEas, _eas, _arch);
 		}
 		catch (MiddlewareException e) {
 			e.printStackTrace();
@@ -121,7 +117,7 @@ public class Downloader extends Thread {
 
 	
 	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
-	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord) {
+	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas) {
 		super();
 		_arch=arch;
 		_lanzados=new Semaforo(numConex);
@@ -130,6 +126,11 @@ public class Downloader extends Thread {
 		_ruta=ruta;
 		_descargar=new ArrayList<parteArchivo>();
 		_coord=coord;
+		_miId=miId;
+		_seedsSolicitados=new Hashtable<Integer, Boolean>();
+		_peersSolicitados=new Hashtable<Integer, Boolean>();
+		_accederEas=accederEas;
+		_eas=eas;
 		
 		calcularDescargas(partes);
 	}
@@ -137,58 +138,161 @@ public class Downloader extends Thread {
 
 	// Comienza a descargar el archivo lanzando un hilo por cada petición.
 	public void run() {
-		parteArchivo aux;
+		try {
+
+			int i=0;
+		
+			while(pedir()) {
+				System.out.println("Iteracion "+i+"...");
+				mostrarDescargar();
+
+				actualizarUsuarios();
+
+				mostrarUsuarios();
+				mostrarDescargar();
+			
+				lanzarPeticiones();				
+				
+				i++;
+			}
+		}
+		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
+			System.out.println("OBJECT_NOT_EXIST");
+		}
+		catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+
+
+	
+	private void lanzarPeticiones() {
+		System.out.println("Conexiones: "+_lanzados.getInicial()+", Usuarios: "+(_seedsSolicitados.size()+_peersSolicitados.size()));		
+		System.out.println("Lanzando hilos...");
+
+		Enumeration<Integer> keys;
+		int usuario, i;
+		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
+		
+		_escribir.bajar();
+		
+		//Crear hilos
+		
+		// Limpiar descargas ya realizadas
+		for(i=0;i<_descargar.size();i++) {
+			if(_descargar.get(i).descargado)
+				_descargar.remove(i);
+		}
+		
+		
+		for(i=0;i<_descargar.size();i++) {
+			//buscar pieza en los peers
+			keys=_peersSolicitados.keys();
+			while((!_descargar.get(i).pedido || !_descargar.get(i).descargado) && keys.hasMoreElements()) {
+				usuario=keys.nextElement();
+				if(!_peersSolicitados.get(usuario)) {
+					if(buscarPieza(usuario,i)) {
+						System.out.println("peers["+usuario+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
+						_descargar.get(i).pedido=true;
+						_peersSolicitados.put(usuario,true);
+						hilos.add(crearHilo(usuario,_descargar.get(i),_peersSolicitados));
+					}
+				}
+			}
+			
+			//lanzar seed si no se ha lanzado un peer
+			if(!_descargar.get(i).pedido && !_descargar.get(i).descargado) {
+				keys=_seedsSolicitados.keys();
+				while((!_descargar.get(i).pedido && !_descargar.get(i).descargado) && keys.hasMoreElements()) {
+					usuario=keys.nextElement();
+					if(!_seedsSolicitados.get(usuario)) {
+						System.out.println("seeds["+usuario+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
+						_descargar.get(i).pedido=true;
+						_seedsSolicitados.put(usuario, true);						
+						hilos.add(crearHilo(usuario,_descargar.get(i),_seedsSolicitados));
+					}
+				}
+			}
+		}
+		
+		_escribir.subir();
+		
+		// Lanzar hilos
+		for(i=0;i<hilos.size();i++) {
+			_lanzados.bajar();
+			hilos.get(i).start();
+		}
+
+	}
+
+
+
+	// Actualiza las tablas de usuarios
+	private void actualizarUsuarios() throws Exception {
 		int[] seeds=_arch.getSeeds();
 		int[] peers=_arch.getPeers();
-		_peersSolicitados=new boolean[peers.length];
-		_seedsSolicitados=new boolean[seeds.length];		
+		int key, i;
 		
-		for(int i=0;i<peers.length;i++) _peersSolicitados[i]=false;
-		for(int i=0;i<seeds.length;i++) _seedsSolicitados[i]=false;		
+		// Eliminar usuarios que no estén
+		Enumeration<Integer> aux=_seedsSolicitados.keys();
+		while(aux.hasMoreElements()) {
+			key=aux.nextElement();
+			if(!buscar(key,seeds))
+				_seedsSolicitados.remove(key);
+		}
+		aux=_peersSolicitados.keys();
+		while(aux.hasMoreElements()) {
+			key=aux.nextElement();
+			if(!buscar(key,peers))
+				_peersSolicitados.remove(key);
+		}
+		
+		//Añadir usuarios nuevos
+		for(i=0;i<seeds.length;i++) {
+			if(!_seedsSolicitados.containsKey(seeds[i]))
+				_seedsSolicitados.put(seeds[i], false);
+		}
+		for(i=0;i<peers.length;i++) {
+			if(!_peersSolicitados.containsKey(peers[i]) && peers[i]!=_miId)
+				_peersSolicitados.put(peers[i], false);
+		}		
+	}
+
+
+
+	private boolean buscar(int valor, int[] vector) {
+		boolean encontrado=false;
+		int i=0;
+		
+		while(!encontrado && i<vector.length)
+			if(valor==vector[i]) encontrado=true;
+			else i++;
+		
+		return encontrado;
+	}
+
+
+
+	//solo para depuracion
+	private void mostrarDescargar() {
+		parteArchivo aux;
 
 		System.out.println("Hay que descargar las siguientes piezas: ");
 		for(int i=0;i<_descargar.size();i++) {
 			aux=_descargar.get(i);
-			System.out.println(aux.inicio+"-"+aux.fin+":"+i);
-		}
-		System.out.println("Conexiones: "+_lanzados.getInicial()+", Usuarios: "+(seeds.length+peers.length));
-		
-		
-		System.out.println("Lanzando hilos...");
-		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
-		Peticion ultimoHilo;
-		
-		for(int i=0;i<_descargar.size();i++) {
-			//buscar pieza en los peers
-			int j=0;
-			while(!_pedidos[i] && j<peers.length) {
-				if(!_peersSolicitados[j]) {
-					if(buscarPieza(peers[j],i)) {
-						System.out.println("peers["+j+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
-						_pedidos[i]=true;
-						_peersSolicitados[j]=true;
-						ultimoHilo=lanzarHilo(peers[j],_descargar.get(i));
-						if(ultimoHilo!=null) hilos.add(ultimoHilo);
-					}
-					else j++;
-				}
-				else j++;
-			}
-			
-			//lanzar seed si no se ha lanzado un peer
-			if(!_pedidos[i]) {
-				j=0;
-				while(!_pedidos[i] && j<seeds.length)
-					if(_seedsSolicitados[j]) j++;
-					else {
-						System.out.println("seeds["+j+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
-						_pedidos[i]=true;
-						_seedsSolicitados[j]=true;
-						ultimoHilo=lanzarHilo(seeds[j],_descargar.get(i));
-						if(ultimoHilo!=null) hilos.add(ultimoHilo);
-					}
-			}
+			System.out.println(aux.inicio+"-"+aux.fin+":"+i+";"+aux.pedido+","+aux.descargado);
 		}
 	}
 	
+	
+	//solo para depuracion
+	private void mostrarUsuarios() {
+		System.out.print("Seeds: ");
+		Enumeration<Integer> k=_seedsSolicitados.keys();
+		while(k.hasMoreElements()) System.out.print(k.nextElement()+" ");
+		System.out.print("\nPeers: ");
+		k=_peersSolicitados.keys();
+		while(k.hasMoreElements()) System.out.print(k.nextElement()+" ");
+		System.out.print("\n");
+	}
 }

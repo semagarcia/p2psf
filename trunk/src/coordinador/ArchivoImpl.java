@@ -3,6 +3,8 @@ package coordinador;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import cliente.parteArchivo;
+
 public class ArchivoImpl extends ArchivoPOA {
 	private String _nombre;
 	private long _tam;
@@ -93,5 +95,19 @@ public class ArchivoImpl extends ArchivoPOA {
 	@Override
 	public cliente.parteArchivo[] getPartes(int id) {
 		return _partes.get(id);
+	}
+
+	@Override
+	public void actualizarPartes(int id, parteArchivo[] partes) {
+		if(partes[0].inicio==0 && partes[0].fin==_tam) {
+			//El usuario se ha convertido en un seed de este fichero
+			eliminarPeer(id);
+			insertarSeed(id);
+			
+			System.out.println("EL USUARIO "+id+" SE HA CONVERTIDO EN SEED");
+		}
+		else {
+			_partes.put(id, partes);
+		}
 	}
 }
