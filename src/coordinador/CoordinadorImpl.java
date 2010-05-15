@@ -11,6 +11,7 @@ import cliente.Usuario;
 public class CoordinadorImpl extends CoordinadorPOA {
 	private Hashtable<Integer, Usuario> _usuarios;
 	private Hashtable<String, Archivo> _archivos;
+	private Hashtable<String, ArchivoImpl> _archivosImpl;
 	private int _idActual;
 	
 
@@ -25,6 +26,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 			resultado=(Archivo) Middleware.interfazSirviente(Archivo.class, sirviente);
 			
 			_archivos.put(ea.info.nombre, resultado);
+			_archivosImpl.put(ea.info.nombre, sirviente);
 		}
 		catch (Exception e) {
 			System.out.println(e.getLocalizedMessage());
@@ -41,10 +43,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 			System.out.print("Archivo "+i+": "+eas[i].info.nombre+", "+eas[i].info.tam+" bytes, "+eas[i].info.checksum+"...");
 
 			Archivo aux=buscar(eas[i].info.nombre);
-			if(aux==null) {
-				aux=crearArchivo(eas[i]);
-				_archivos.put(eas[i].info.nombre, aux);
-			}
+			if(aux==null) aux=crearArchivo(eas[i]);
 
 			if((eas[i].partes[0].fin-eas[i].partes[0].inicio)==eas[i].info.tam)
 				aux.insertarSeed(idUsuario);
@@ -72,10 +71,15 @@ public class CoordinadorImpl extends CoordinadorPOA {
 				System.out.println("eliminado usuario.");
 				
 				if(aux.getPeers().length==0 && aux.getSeeds().length==0) {
-					_archivos.remove(aux.nombre());
-//eliminar referencia en CORBA
-					System.out.println("No quedan usuarios con este archivo, archivo eliminado.");
+					try {
+						Middleware.desregistrar(_archivosImpl.remove(_archivos.remove(aux.nombre()).nombre()));
 					}
+					catch (MiddlewareException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("No quedan usuarios con este archivo, archivo eliminado.");
+				}
 			}
 		}		
 	}
@@ -85,6 +89,7 @@ public class CoordinadorImpl extends CoordinadorPOA {
 	public CoordinadorImpl() {
 		_usuarios=new Hashtable<Integer, Usuario>();
 		_archivos=new Hashtable<String, Archivo>();
+		_archivosImpl=new Hashtable<String, ArchivoImpl>();
 		_idActual=0;
 	}
 	
