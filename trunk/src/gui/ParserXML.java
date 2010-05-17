@@ -1,14 +1,10 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package gui;
 
+import cliente.EstrArchivo;
+import cliente.infoArchivo;
+import cliente.parteArchivo;
+
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -19,111 +15,146 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 
 
 /**
- *
+ * Clase encargada del parseo y extracción de información desde el fichero
+ * XML especificado
  * @author sema
  */
 public class ParserXML {
 
     private Document DOM;
-    private List listadoDescargas = new ArrayList();
+    //private List listadoDescargas = new ArrayList();
+    private EstrArchivo[] archivosUsuario;
     private String nombreFichero;
 
-    /*
-     * Constructor parametrizado
+    // Etiquetas del archivo XML
+    private static final String ETIQUETA_ARCHIVO = "archivo";
+    private static final String ETIQUETA_NOMBRE = "nombre";
+    private static final String ETIQUETA_RUTA = "ruta";
+    private static final String ETIQUETA_TAM = "tam";
+    private static final String ETIQUETA_CHECKSUM = "checksum";
+    private static final String ETIQUETA_SEEDS = "seed";
+    private static final String ETIQUETA_PEERS = "peers";
+    private static final String ETIQUETA_PARTE = "parte";
+
+
+    /**
+     * Constructor parametrizado. Recibe el nombre del XML a parsear
+     * @param nomFich
      */
     ParserXML(String nomFich) {
         nombreFichero = nomFich; // Obtenemos el nombre del fichero xml (la biblioteca)
     }
 
 
-    /*
+    /**
      * Esta función se encarga de generar un documento o arbol XML en memoria a
      * partir de un fichero dado
      */
     public void parsearArchivoXML() {
-        // Se instancia el objeto DocumentBuilderFactory
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        
         try {
-            // Se utiliza el objeto DocumentBuilderFactory para crear un DocumentBuilder
+            // Se instancia una factoría para crear el parser
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            // Se utiliza la factoría para crear el parser y utilizarlo
             DocumentBuilder db = dbf.newDocumentBuilder();
-            DOM = db.parse(nombreFichero); // Parseamos el archivo XML
+            DOM = db.parse("src/gui/" + nombreFichero); // Parseamos el archivo XML
         } catch (ParserConfigurationException pce) { pce.printStackTrace();
-        } catch (SAXException se) { se.printStackTrace();
+        } catch (SAXParseException spe) { System.out.println("Excepction SAX Parse: XML mal formado");
+        } catch (SAXException se) { se.printStackTrace(); System.out.println("Excepcion SAX");
         } catch (IOException ioe) { ioe.printStackTrace(); }
     }
 
     
-    /*
+    /**
      * Esta función parsea el archivo XML y extrae los datos de él
+     * @param listaFicherosCompartidos para poder acceder al JList
      */
-    public void parsearDocumento() {
+    public EstrArchivo[] parsearDocumento(javax.swing.DefaultListModel lista) {
         Element docEle = DOM.getDocumentElement(); // Obtiene el documento raiz
-
         // Buscamos el nodo de más alto nivel: <archivo></archivo>
-        NodeList nl = docEle.getElementsByTagName("archivo");
-        if (nl != null && nl.getLength() > 0)
-            for (int i = 0; i < nl.getLength(); i++) {
-                Element elemento = (Element) nl.item(i); // Devuelve el elemento
-                //Archivo a = obtenerDescarga(elemento); // Obtiene el objeto
-                //listadoDescargas.add(a); // Se añade a la lista
-            }
-    }
+        NodeList nl = docEle.getElementsByTagName(ETIQUETA_ARCHIVO);
 
+        // Creamos un vector de archivos de tantas dimensiones como archivos haya en el XML
+        archivosUsuario = new EstrArchivo[nl.getLength()];
 
-    /**
-     * Esta funcion es para mostrar el fichero por pantalla
-     */
-    public void imprimirResultados() {
-        Iterator it = listadoDescargas.iterator();
-        while (it.hasNext())
-            System.out.println(it.next().toString());
-    }
-
-
-    /**
-     * Devuelve un objeto Archivo generado con todos los datos de un nodo de XML
-     * @param elemento
-     * @return
-     */
-    public Archivo obtenerDescarga(Element elemento) {
-        int id = Integer.parseInt(elemento.getAttribute("id"));
-        String titulo = obtenerTexto(elemento, "titulo");
-        String ruta = obtenerTexto(elemento, "ruta");
-        int hits = obtenerEntero(elemento, "hits");
-        // Crear un objeto Descargas con los datos recibidos
-        Archivo a = new Archivo(id, titulo, ruta, hits);
-        return a;
-    }
-
-
-    /**
-     * Devuelve el valor entero del elemento recibido
-     * @param elemento
-     * @param nombreEtiqueta
-     * @return
-     */
-    private int obtenerEntero(Element elemento, String nombreEtiqueta) {
-        return Integer.parseInt(obtenerTexto(elemento, nombreEtiqueta));
-    }
-    
-    
-    /**
-     * Devuelve la cadena del elemento recibido
-     * @param elemento
-     * @param nombreEtiqueta
-     * @return
-     */
-    private String obtenerTexto(Element elemento, String nombreEtiqueta) {
-        String texto = null;
-        NodeList nl = elemento.getElementsByTagName(nombreEtiqueta);
         if (nl != null && nl.getLength() > 0) {
-            Element el = (Element) nl.item(0);
-            texto = el.getFirstChild().getNodeValue();
+            for (int i = 0; i < nl.getLength(); i++) {
+                // Comprobacion para saber que el item i es un nodo
+                if (nl.item(i).getNodeType() == nl.item(i).ELEMENT_NODE) {
+                    Element elementoRaiz = (Element) nl.item(i);
+
+                    // Obtenemos el valor de la etiqueta <nombre></nombre>
+                    NodeList nodoNombre = elementoRaiz.getElementsByTagName(ETIQUETA_NOMBRE);
+                    Element nombreElemento = (Element) nodoNombre.item(0);
+                    //archivosUsuario[i].info.nombre = nombreElemento.getFirstChild().getNodeValue();
+                    String nombre = nombreElemento.getFirstChild().getNodeValue();
+
+                    // Obtenemos el valor de la etiqueta <ruta></ruta>
+                    NodeList nodoRuta = elementoRaiz.getElementsByTagName(ETIQUETA_RUTA);
+                    Element rutaElemento = (Element) nodoRuta.item(0);
+                    //archivosUsuario[i].info.ruta = rutaElemento.getFirstChild().getNodeValue();
+                    String ruta = rutaElemento.getFirstChild().getNodeValue();
+                    lista.addElement(ruta + "/" + nombre); // Con esto se añade a la interfaz
+
+                    // Obtenemos el valor de la etiqueta <tam></tam>
+                    NodeList nodoTam = elementoRaiz.getElementsByTagName(ETIQUETA_TAM);
+                    Element tamElemento = (Element) nodoTam.item(0);
+                    //archivosUsuario[i].info.tam = Long.parseLong(tamElemento.getFirstChild().getNodeValue());
+                    long tam = Long.parseLong(tamElemento.getFirstChild().getNodeValue());
+
+                    // Obtenemos el valor de la etiqueta <checksum></checksum>
+                    NodeList nodoHash = elementoRaiz.getElementsByTagName(ETIQUETA_CHECKSUM);
+                    Element hashElemento = (Element) nodoHash.item(0);
+                    //archivosUsuario[i].info.checksum = Long.parseLong(hashElemento.getFirstChild().getNodeValue());
+                    long checksum = Long.parseLong(hashElemento.getFirstChild().getNodeValue());
+
+                    // Obtenemos el valor de la etiqueta <seed></seed>
+                    NodeList nodoSeed = elementoRaiz.getElementsByTagName(ETIQUETA_SEEDS);
+                    Element seedElemento = (Element) nodoSeed.item(0);
+                    // Con el campo seed del XML que hacemos?? para que lo recuperamos??
+                    
+                    // Creamos la información referente al nuevo archivo
+                    infoArchivo info = new infoArchivo(ruta, nombre, tam, checksum);
+
+                    // Creamos la información referente a las partes
+                    parteArchivo[] piezas = new parteArchivo[1];
+                    piezas[0] = new parteArchivo();
+                    piezas[0].inicio = 0;
+                    piezas[0].fin = tam;
+                    piezas[0].pedido = false;
+                    piezas[0].descargado = false;
+
+                    // Reservamos memoria para el archivo i-ésimo
+                    archivosUsuario[i] = new EstrArchivo(info, piezas);
+
+                    // Obtenemos el acceso al nodo cuya etiqueta es <peers></peers>
+                    NodeList nodoPeers = elementoRaiz.getElementsByTagName(ETIQUETA_PEERS);
+                    Element peerElemento = (Element) nodoPeers.item(0);
+                    // Y ahora el valor de las n-subetiquetas que haya <parte></parte>
+                    NodeList nodoParte = peerElemento.getElementsByTagName(ETIQUETA_PARTE);
+
+                    // Iteramos por cada uno de los nodos <parte></parte> que hay
+                    // Hacemos mas eficiente la consulta hacia el número de partes
+                    int numPartes = nodoParte.getLength();
+                    archivosUsuario[i].partes = new parteArchivo[numPartes];
+                    for (int j=0; j<numPartes; j=j+2) {
+                        int k = j + 1; // Para el índice
+                        // Reservamos memoria para la nueva parte
+                        archivosUsuario[i].partes[j] = new parteArchivo();
+                        // Insertamos el inicio y fin de cada parte
+                        archivosUsuario[i].partes[j].inicio = Long.parseLong(nodoParte.item(j).getFirstChild().getNodeValue());
+                        archivosUsuario[i].partes[j].fin = Long.parseLong(nodoParte.item(k).getFirstChild().getNodeValue());
+                        //System.out.println("Inicio: " + archivosUsuario[i].partes[j].inicio);
+                        //System.out.println("Fin: " + archivosUsuario[i].partes[j].fin);
+                    }                   
+                } // Fin del if(comprobacion es un nodo)
+            } // Fin del for (int i = 0; i < nl.getLength(); i++)
         }
-        return texto;
+        return archivosUsuario;
     }
 }
