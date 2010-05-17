@@ -21,6 +21,9 @@ public class Ayuda extends javax.swing.JDialog {
     public Ayuda(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+
+        // Centramos la ventana en la pantalla (Sólo por NetBeans)
+        setLocationRelativeTo(null);
     }
 
     /** This method is called from within the constructor to

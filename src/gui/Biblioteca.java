@@ -1,9 +1,4 @@
-/*
- * Esta clase es la encargada de crear la biblioteca (fichero XML)
- */
-
 package gui;
-
 
 import java.io.*;
 
@@ -11,13 +6,13 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-//import com.sun.org.apache.xerces.jaxp.DocumentBuilderImpl;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl;
 
 /**
- *
+ * Esta clase es la encargada de crear un nuevo fichero XML a partir de los
+ * archivos que hayan sido especificados para compartir
  * @author sema
  */
 public class Biblioteca {
@@ -46,7 +41,7 @@ public class Biblioteca {
     private Document documentoXML = null;
     private Element biblioteca = null;
 
-    /*
+    /**
      * El constructor crea la estructura genérica del documento XML, con el nodo raíz
      */
     Biblioteca () {
@@ -66,9 +61,15 @@ public class Biblioteca {
         documentoXML.appendChild(biblioteca); // Agregar al documento principal
     }
 
-    /*
+    /**
      * Esta clase es la que añade toda la información de la biblioteca, es decir,
      * es la que va insertando cada nodo "archivo"
+     * @param nombre Nombre del archivo
+     * @param ruta Ruta al archivo (local al usuario)
+     * @param tam Tamaño del archivo
+     * @param hash Checksum o función resumen (suma verificación)
+     * @param seed Si el archivo está completo o no (el usuario es seed o no)
+     * @param partes Si es un peer, vector que contiene las partes que posee el usuario
      */
     public void insertarNuevoArchivo(String nombre, String ruta, long tam, long hash,
             boolean seed, long[] partes){
@@ -120,7 +121,10 @@ public class Biblioteca {
         }
     }
 
-
+    /**
+     * Función que genera el fichero XML
+     * @return True o False en función de si fue correcto o hubo algún error
+     */
     public boolean guardarXML() {
         boolean resultado = true;
         StringWriter escritor = new StringWriter();
@@ -155,9 +159,8 @@ public class Biblioteca {
         } catch (Exception e) { 
             System.out.println("Error : " + e);
             resultado = false;
-        } /*finally {
-            
-        }*/
+        }
+        
         return resultado;
     }
 }
