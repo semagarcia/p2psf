@@ -143,16 +143,8 @@ public class Downloader extends Thread {
 			int i=0;
 		
 			while(pedir()) {
-				System.out.println("Iteracion "+i+"...");
-				mostrarDescargar();
-
-				actualizarUsuarios();
-
-				mostrarUsuarios();
-				mostrarDescargar();
-			
-				lanzarPeticiones();				
-				
+				actualizarUsuarios();			
+				lanzarPeticiones();
 				i++;
 			}
 		}
@@ -167,15 +159,14 @@ public class Downloader extends Thread {
 
 	
 	private void lanzarPeticiones() {
-		System.out.println("Conexiones: "+_lanzados.getInicial()+", Usuarios: "+(_seedsSolicitados.size()+_peersSolicitados.size()));		
-		System.out.println("Lanzando hilos...");
-
 		Enumeration<Integer> keys;
 		int usuario, i;
 		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
 		
+		System.out.println("bajando");
 		_escribir.bajar();
-		
+		System.out.println("bajado");
+
 		//Crear hilos
 		
 		// Limpiar descargas ya realizadas
@@ -192,7 +183,6 @@ public class Downloader extends Thread {
 				usuario=keys.nextElement();
 				if(!_peersSolicitados.get(usuario)) {
 					if(buscarPieza(usuario,i)) {
-						System.out.println("peers["+usuario+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
 						_descargar.get(i).pedido=true;
 						_peersSolicitados.put(usuario,true);
 						hilos.add(crearHilo(usuario,_descargar.get(i),_peersSolicitados));
@@ -206,7 +196,6 @@ public class Downloader extends Thread {
 				while((!_descargar.get(i).pedido && !_descargar.get(i).descargado) && keys.hasMoreElements()) {
 					usuario=keys.nextElement();
 					if(!_seedsSolicitados.get(usuario)) {
-						System.out.println("seeds["+usuario+"]:"+_descargar.get(i).inicio+"-"+_descargar.get(i).fin);
 						_descargar.get(i).pedido=true;
 						_seedsSolicitados.put(usuario, true);						
 						hilos.add(crearHilo(usuario,_descargar.get(i),_seedsSolicitados));

@@ -29,14 +29,25 @@ public class UsuarioClient {
 	//Semáforo para escribir en la tabla _eas (información local de los archivos)
 	private Semaforo _accederEas;
 
+	private String _ipservidor;
+
+	private String _iplocal;
+
+	private int _puerto;
+
 	
-	public UsuarioClient(String args[]) throws MiddlewareException {
+	public UsuarioClient(String ipservidor, String iplocal, int puerto) throws MiddlewareException {
 		_coord=null;
 		_id=-1;
 		_eas=new Hashtable<String, EstrArchivo>();
 		_descargas=new ArrayList<Downloader>();
 		_accederEas=new Semaforo(1);
+		_ipservidor=ipservidor;
+		_iplocal=iplocal;
+		_puerto=puerto;
 
+		String args[]={"-ORBInitialPort",String.valueOf(puerto)};
+		
 		//Inicialiación del ORB
 		JavaORB middleware = new JavaORB();
 		middleware.options = args;
@@ -48,15 +59,16 @@ public class UsuarioClient {
 	}
 	
 	
-	public void anyadir(EstrArchivo[] eas) {
+	public void anyadir(ArrayList<EstrArchivo> eas) {
 		ArrayList<EstrArchivo> aux=new ArrayList<EstrArchivo>();
 		
 		_accederEas.bajar();
 		
-		for(int i=0;i<eas.length;i++) {
-			if(_eas.get(eas[i].info.nombre)==null) {
-				_eas.put(eas[i].info.nombre, eas[i]);
-				aux.add(eas[i]);
+		for(int i=0;i<eas.size();i++) {
+			EstrArchivo e=eas.get(i);
+			if(_eas.get(e.info.nombre)==null) {
+				_eas.put(e.info.nombre, e);
+				aux.add(e);
 			}
 		}
 
@@ -82,18 +94,34 @@ public class UsuarioClient {
 	}
 	
 	
-	public void conectar(String[] args) throws MiddlewareException {
-		// Crea el hilo de escucha
-		_hiloServer=new UsuarioServer(args, _eas, _accederEas);
-		_hiloServer.start();
-
-		_accederEas.bajar();
-		Collection<EstrArchivo> col=_eas.values();
-		EstrArchivo[] archivos=new EstrArchivo[col.size()];
-		col.toArray(archivos);
-		_accederEas.subir();
+	@SuppressWarnings("deprecation")
+	public boolean conectar() {
+		boolean conectado=(_id!=-1);
 		
-		_id=_coord.conectar(archivos, _hiloServer.getRef());
+		if(!conectado) {
+			// Crea el hilo de escucha
+			String[] parametros={"-ORBInitialPort",String.valueOf(_puerto)};
+			_hiloServer=new UsuarioServer(parametros, _eas, _accederEas);
+			_hiloServer.start();
+
+			_accederEas.bajar();
+			Collection<EstrArchivo> col=_eas.values();
+			EstrArchivo[] archivos=new EstrArchivo[col.size()];
+			col.toArray(archivos);
+			_accederEas.subir();
+			
+			try {
+				_id=_coord.conectar(archivos, _hiloServer.getRef());
+				conectado=true;
+			}
+			catch (MiddlewareException e) {
+				_hiloServer.stop();
+				_id=-1;
+				conectado=false;
+			}
+		}
+		
+		return conectado;
 	}
 	
 	
@@ -108,8 +136,10 @@ public class UsuarioClient {
 
 	
 	@SuppressWarnings("deprecation")
-	public void desconectar() {
-		if(_id!=-1) {
+	public boolean desconectar() {
+		boolean desconectado=(_id==-1);
+		
+		if(!desconectado) {
 			
 			_accederEas.bajar();
 			Collection<EstrArchivo> col=_eas.values();
@@ -120,13 +150,19 @@ public class UsuarioClient {
 			_coord.desconectar(archivos,_id);
 			_hiloServer.stop();
 			_id=-1;
+			
+			desconectado=true;
 		}
+		
+		return desconectado;
 	}
 
-	public void descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta) {
+	public Downloader descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta) {
 		//lanza el hilo de descarga para el archivo
 		Downloader d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas);
 		d.start();
 		_descargas.add(d);
+		
+		return d;
 	}
 }

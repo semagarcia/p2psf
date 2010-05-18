@@ -4,8 +4,8 @@ package gui;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
@@ -13,8 +13,14 @@ import java.util.zip.CheckedInputStream;
 import javax.swing.DefaultListModel;
 import javax.swing.JProgressBar;
 import javax.swing.ListCellRenderer;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.table.DefaultTableModel;
+
+import middleware.MiddlewareException;
+
+import cliente.EstrArchivo;
+import cliente.UsuarioClient;
+import cliente.infoArchivo;
+import cliente.parteArchivo;
 
 
 /**
@@ -23,9 +29,16 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ClienteP2P extends javax.swing.JFrame {
 
-    private Buscando _hilo;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private Buscando _hilo;
     private int _tamBloque;
     private int _conexionesMaximas;
+    private String _ipservidor;
+    private String _iplocal;
+    private int _puerto;
     private String _nombreBiblioteca;
     private boolean _conectado = false;
     private DefaultTableModel _dm;
@@ -35,25 +48,31 @@ public class ClienteP2P extends javax.swing.JFrame {
     //private TableColumn columnaBarraProgreso;
     //private TablaPorcentaje miTabla = new TablaPorcentaje();
     
+    private UsuarioClient _cliente;
+    
+    private ArrayList<EstrArchivo> _easTmp; 
+    
     
     /** Creates new form ClienteP2P */
     public ClienteP2P() {
+    	_easTmp=new ArrayList<EstrArchivo>();
+    	_ipservidor="127.0.0.1";
+    	_iplocal="127.0.0.1";
+    	_puerto=2000;
+    	
+    	try {
+			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto);
+		}
+    	catch (MiddlewareException e) {
+			e.printStackTrace();
+		}
+    	
         // Inicialización de componentes: interfaz, escuchadores, manejadores...
         initComponents();
 
-        // Selección y establecimiento de la apariencia de la aplicación
-        /*try {
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
-
+        // Desactiva el boton para desconectarse
+    	iconDesconectar.setEnabled(false);
+        
         // Centramos en la pantalla la ventana de la aplicación (sólo por NetBeans)
         setLocationRelativeTo(null);
 
@@ -493,8 +512,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         panelInferiorDrchoLayout.setHorizontalGroup(
             panelInferiorDrchoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelInferiorDrchoLayout.createSequentialGroup()
-                .addGap(46, 46, 46)
-                .addComponent(valorEstadoActual)
+                .addGap(46, 46, 46)   // Modificación para el panel inferior derecho
+                .addComponent(valorEstadoActual, 190, 190, 190)
                 .addContainerGap(240, Short.MAX_VALUE))
         );
         panelInferiorDrchoLayout.setVerticalGroup(
@@ -652,25 +671,14 @@ public class ClienteP2P extends javax.swing.JFrame {
      */
     private void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLoginActionPerformed
         // Se crea por un lado la barra de progreso personalizado
-        _dm.addRow(new Object[]{"Prueba", "95%", crearBarraDescarga(100, 95, "95%")});
-        _dm.addRow(new Object[]{"Prueba2", "5%", crearBarraDescarga(100, 5, "5%")});
-        _dm.addRow(new Object[]{"Prueba3", "55%", crearBarraDescarga(100, 55, "55%")});
-          /*try {
-           for (int row = 0; row < _tablaDescargas.getModel().getRowCount(); row++) {
-            JProgressBar jp = (JProgressBar) _tablaDescargas.getModel().getValueAt(row, 2);
-            for (int i = 0; i <= 100; i++) {
-             jp.setValue(i);
-             jp.setString(i + "%");
-             // p1.set
-             Thread.sleep(100);
-             _tablaDescargas.repaint();
-            }
-           }
-          } catch (Exception e) {
-           e.printStackTrace();
-          }*/
-        _conectado = true;
+        _conectado = _cliente.conectar();
 
+        if(_conectado) {
+        	cambiarEstado("");
+        	iconConectar.setEnabled(false);
+        	iconDesconectar.setEnabled(true);
+        }
+    	else cambiarEstado("Error al conectar.");
     }//GEN-LAST:event_opcionArchivoLoginActionPerformed
 
     /**
@@ -687,8 +695,18 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param evt
      */
     private void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLogoutActionPerformed
-        actualizarDescarga("Prueba2", 30);
-        _conectado = false;
+//        actualizarDescarga("Prueba2", 30);
+    	_conectado = !_cliente.desconectar();
+    	
+    	if(!_conectado) {
+    		cambiarEstado("");
+        	iconConectar.setEnabled(true);
+        	iconDesconectar.setEnabled(false);
+    	}
+    	else cambiarEstado("Error al desconectar.");
+
+    	
+        
     }//GEN-LAST:event_opcionArchivoLogoutActionPerformed
 
     /**
@@ -817,19 +835,62 @@ public class ClienteP2P extends javax.swing.JFrame {
 
         opc = anyadir.showOpenDialog(this); // Se muestra el diálogo
 
+        EstrArchivo eA;
+        infoArchivo iA;
+        parteArchivo[] pA;
+        
         // Ahora comprobamos si ha pulsado sobre aceptar
         if (opc == javax.swing.JFileChooser.APPROVE_OPTION) {
             ficheros = anyadir.getSelectedFiles(); // Obtenemos los ficheros seleccionados
             //String [] fich = new String[ficheros.length];
             for (int i=0; i<ficheros.length; i++) {
-                //fich[i] = ficheros[i].getPath();
-                //modeloListaRecursos.addElement(fich[i]);
+            	iA=getInfoArchivo(ficheros[i]);
+            	pA=new parteArchivo[1];
+            	pA[0]=new parteArchivo();
+            	pA[0].inicio=0;
+            	pA[0].fin=iA.tam;
+            	pA[0].pedido=false;
+            	pA[0].descargado=false;
+            	eA=new EstrArchivo(iA,pA);
+            	_easTmp.add(eA);
                 _modeloListaRecursos.addElement(ficheros[i].getPath());
             }
         }
     }//GEN-LAST:event_anyadirRecursoMouseClicked
 
+    
     /**
+     * Función que obtiene la informacion de un fichero
+     * @param file
+     * @return
+     */
+    private infoArchivo getInfoArchivo(File file) {
+    	infoArchivo aux=new infoArchivo();
+        CheckedInputStream suma = null;
+
+        try {
+        	FileInputStream f = new FileInputStream(file);
+            suma = new CheckedInputStream(f, new CRC32());
+            BufferedInputStream in = new BufferedInputStream(suma);
+
+          	while (in.read() != -1) {  }
+            in.close(); // Cerramos el fichero
+        }
+        catch (IOException ex) {
+        	Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        aux.nombre=file.getName();
+        aux.ruta=file.getPath();
+        aux.checksum=suma.getChecksum().getValue();
+        aux.tam=file.length();    	
+    	
+		return aux;
+	}
+    
+    
+
+	/**
      * Cuando se pulse sobre el botón eliminar se evalúa si hay recursos seleccionados,
      * y en caso de existir, se eliminan. Si no, se muestra un aviso
      * @param evt
@@ -837,15 +898,28 @@ public class ClienteP2P extends javax.swing.JFrame {
     private void quitarRecursoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_quitarRecursoMouseClicked
         // Obtenemos el indice que ocupan los elementos que se han seleccionado
         int [] indices = _listaFicherosCompartidos.getSelectedIndices();
-
+        String fichero; 
+        String nombre=new String();
+               
         // Si no hay ningun elemento seleccionado
         if (indices.length == 0)
             javax.swing.JOptionPane.showMessageDialog(this,
                     "No ha seleccionado ningún elemento para eliminar");
-
+        
         // Eliminamos desde el final para evitar problemas con los índices
-        for (int i=indices.length - 1; i>=0; i--)
+        for (int i=indices.length - 1; i>=0; i--) {
+            fichero=(String) _modeloListaRecursos.getElementAt(indices[i]);
+            nombre=fichero.substring(fichero.lastIndexOf("/"));
+    		int j=0;
+    		while(j<_easTmp.size()) {
+    			if(_easTmp.get(j).info.nombre==nombre) {
+    				System.out.println(_easTmp.remove(j));
+    				j=_easTmp.size();
+    			}
+    			else j++;
+    		}
             _modeloListaRecursos.removeElementAt(indices[i]);
+        }
     }//GEN-LAST:event_quitarRecursoMouseClicked
 
     /**
@@ -855,31 +929,22 @@ public class ClienteP2P extends javax.swing.JFrame {
      */
     private void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_actualizarBibliotecaMouseClicked
         Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
-        int numeroRecursos = _modeloListaRecursos.size(); // Hacemos más eficiente la consulta
-        String [] nombres = new String[numeroRecursos]; // Vector para los nombres
-        String [] rutas = new String[numeroRecursos]; // Vector para las rutas
-        long [] tams = new long[numeroRecursos]; // Vector para los tamaños
-        long [] hashs = new long[numeroRecursos]; // Vector para los checksum
-        long [][] partes = new long[numeroRecursos][2]; // Para las partes, por defecto solo dos
+        String resultado="";
         
         // Recorremos todos los elementos de la lista y los metemos en el xml
-        for (int i=0; i<numeroRecursos; i++) {
-            rutas[i] = _modeloListaRecursos.getElementAt(i).toString(); // Ruta completa
-            // El nombre se debe extraer de la ruta completa
-            nombres[i] = rutas[i].substring(rutas[i].lastIndexOf("/"));
-            tams[i] = calcularTamanyo(rutas[i]); // Calculamos el tamaño
-            hashs[i] = calcularChecksum(rutas[i]); // Calculamos el checksum
-            partes[i][0] = 0; partes[i][1] = tams[i];
-            bib.insertarNuevoArchivo(nombres[i], rutas[i], tams[i], hashs[i], true, partes[i]);
+        for (int i=0; i<_easTmp.size(); i++) {
+            bib.insertarNuevoArchivo(_easTmp.get(i));
         }
 
         // Comprobamos que se ha guardado correctamente
         if(bib.guardarXML()) // Archivo guardado correctamente
-            javax.swing.JOptionPane.showMessageDialog(this,
-                    "¡Archivo \"Mi Biblioteca.xml\" generado correctamente!");
+            resultado+="¡Archivo \""+_nombreBiblioteca+"\" generado correctamente!";
         else // Error al guardar el archivo
-            javax.swing.JOptionPane.showMessageDialog(this,
-                    "Error al generar el archivo \"Mi Biblioteca.xml\"");
+            resultado+="Error al generar el archivo \""+_nombreBiblioteca+"\"";
+        
+        _cliente.anyadir(_easTmp);        
+        
+        javax.swing.JOptionPane.showMessageDialog(this,resultado);
     }//GEN-LAST:event_actualizarBibliotecaMouseClicked
 
     /**
@@ -918,45 +983,10 @@ public class ClienteP2P extends javax.swing.JFrame {
         // Despues lo parseamos el arbol XML para extraer la informacion
         // Aki debemos capturar las excepciones, y si se lanza la expcecion SAXParseException
         // es debido a un XML mal formado. Opciones adicionales:
-        parser.parsearDocumento(_modeloListaRecursos);
+        parser.parsearDocumento(_modeloListaRecursos, _easTmp);
     }
 
-    /**
-     * Función que calcula el la suma de verificación del fichero pasado como argumento
-     * @param fichero Ruta hacia el archivo para calcularle el hash
-     * @return Devuelve el hash de dicho fichero pasado como argumento
-     */
-    private long calcularChecksum(String fichero) {
-        CheckedInputStream suma = null;
-
-        try {
-            FileInputStream f = new FileInputStream(fichero);
-            suma = new CheckedInputStream(f, new CRC32());
-            BufferedInputStream in = new BufferedInputStream(suma);
-
-            try { 
-                while (in.read() != -1) {  }
-                in.close(); // Cerramos el fichero
-            } catch (IOException ex) {
-                Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return suma.getChecksum().getValue();
-    }
-
-    /**
-     * Función que calcula el tamaño de un fichero pasado como argumento
-     * @param fichero Indica la ruta al fichero
-     * @return El tamaño del fichero pasado como argumento
-     */
-    private long calcularTamanyo(String fichero) {
-        File ficheroTam = new File(fichero); // Abrimos el fichero
-        return ficheroTam.length(); // Devolvemos el tamaño
-    }
-
+    
     /**
      * Método que añade una nueva fila a la tabla de búsqueda
      * @param n Nombre del fichero encontrado

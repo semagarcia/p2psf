@@ -20,7 +20,7 @@ import javax.swing.ListCellRenderer;
  *
  * @author sema
  */
-class MiListaRenderer implements ListCellRenderer {
+class MiItemLista implements ListCellRenderer {
     protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 
     public Component getListCellRendererComponent(JList list, Object value, int index,
@@ -98,40 +98,4 @@ class MiListaRenderer implements ListCellRenderer {
     else // Y si no reconoce el tipo de archivo, muestra uno en blanco
         return "/gui/images/ext_null.png";
   }
-}
-
-
-public class MiItemLista {
-    static ImageIcon a;
-    static ImageIcon b;
-    static ImageIcon c;
-    static ImageIcon d;
-
-    MiItemLista() {
-       a = new ImageIcon(getClass().getResource("/gui/images/conectar.png"));
-       b = new ImageIcon(getClass().getResource("/gui/images/desconectar.png"));
-       c = new ImageIcon(getClass().getResource("/gui/images/next2.png"));
-       d = new ImageIcon(getClass().getResource("/gui/images/share.png"));
-
-    }
-
-    public static void main(String args[]) {
-        Object elements[][] = {
-            { new javax.swing.JLabel(a).getIcon(), "A"},
-            { new javax.swing.JLabel(b).getIcon(), "B"},
-            { new javax.swing.JLabel(c).getIcon(), "C"},
-            { new javax.swing.JLabel(d).getIcon(), "D"}};
-
-        JFrame frame = new JFrame("Complex Renderer");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        ListCellRenderer renderer = new MiListaRenderer();
-        JList lista = new JList(elements);
-        lista.setCellRenderer(renderer);
-
-        JScrollPane scrollPane = new JScrollPane(lista);
-        frame.add(scrollPane, BorderLayout.CENTER);
-        frame.setSize(300, 200);
-        frame.setVisible(true);
-    }
 }
