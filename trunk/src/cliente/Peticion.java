@@ -63,11 +63,7 @@ public class Peticion extends Thread {
 	}
 	
 	
-	public void run() {		
-		System.out.println("Lanzado hilo que pide ["+_pieza.inicio+"-"+_pieza.fin+"]");
-
-		System.out.println("Usuario["+_idUsuario+"]"+_usuario.saluda());
-
+	public void run() {
 		byte[] parte;
 		
 		parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
@@ -87,12 +83,13 @@ public class Peticion extends Thread {
 	private void anyadirParte() {
 		int i=0, j;
 		
-		_accederEas.bajar();	
+		System.out.println("BAJANDO");
+		_accederEas.bajar();
+		System.out.println("BAJADO");
 
 		
 		//Anyade el archivo a eas si no existía
 		if(_eas.get(_nombre)==null) {
-			System.out.println("Añadiendo archivo a eas");
 			infoArchivo info=new infoArchivo(_ruta, _nombre, _tam, _checksum);
 			EstrArchivo nuevo=new EstrArchivo(info, null);
 			_eas.put(info.nombre, nuevo);
@@ -155,11 +152,8 @@ public class Peticion extends Thread {
 			resultado.toArray(_eas.get(_nombre).partes);
 		}
 		
-		System.out.println("USUARIO "+_miId+", ACTUALIZADAS PARTES");
 		_arch.actualizarPartes(_miId, _eas.get(_nombre).partes);
-		
-		mostrarPartes(_eas.get(_nombre).partes);	
-		
+				
 		_accederEas.subir();
 	}
 

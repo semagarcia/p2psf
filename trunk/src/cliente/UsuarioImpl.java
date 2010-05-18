@@ -32,11 +32,7 @@ public class UsuarioImpl extends UsuarioPOA {
 	public byte[] solicitarParte(String nombre, long inicio, long fin) {
 		
 		_accederEas.bajar();
-		
-		System.out.println("Soy "+_prueba+", me han pedido "+nombre+"["+inicio+"-"+fin+"]");
-
 		File fichero=new File(_eas.get(nombre).info.ruta);
-		
 		_accederEas.subir();
 		
 		int tam=(int)(fin-inicio);

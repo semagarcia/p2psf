@@ -47,7 +47,14 @@ public class Opciones extends javax.swing.JDialog {
         etiquetaTamBloque = new javax.swing.JLabel();
         cajaConexMax = new javax.swing.JTextField();
         cajaTamBloque = new javax.swing.JTextField();
-        botonVolver = new javax.swing.JButton();
+        botonAceptar = new javax.swing.JButton();
+        etiquetaIPServidor = new javax.swing.JLabel();
+        cajaIPServidor = new javax.swing.JTextField();
+        etiquetaIPCliente = new javax.swing.JLabel();
+        cajaIPCliente = new javax.swing.JTextField();
+        etiquetaPuerto = new javax.swing.JLabel();
+        cajaPuerto = new javax.swing.JTextField();
+        botonCancelar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Ayuda de StickMotion");
@@ -66,11 +73,34 @@ public class Opciones extends javax.swing.JDialog {
         cajaTamBloque.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaTamBloque.setText("0");
 
-        botonVolver.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/next2.png"))); // NOI18N
-        botonVolver.setText("¡Aceptar!");
-        botonVolver.addActionListener(new java.awt.event.ActionListener() {
+        botonAceptar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/ok.png"))); // NOI18N
+        botonAceptar.setText("¡Aceptar!");
+        botonAceptar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonVolverActionPerformed(evt);
+                botonAceptarActionPerformed(evt);
+            }
+        });
+
+        etiquetaIPServidor.setText("Dirección IP del Servidor P2PSF");
+
+        cajaIPServidor.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        cajaIPServidor.setText("0");
+
+        etiquetaIPCliente.setText("Dirección IP del cliente P2PSF");
+
+        cajaIPCliente.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        cajaIPCliente.setText("0");
+
+        etiquetaPuerto.setText("Puerto a través del cual se va a conectar");
+
+        cajaPuerto.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        cajaPuerto.setText("0");
+
+        botonCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/noOk.png"))); // NOI18N
+        botonCancelar.setText("¡Cancelar!");
+        botonCancelar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botonCancelarActionPerformed(evt);
             }
         });
 
@@ -94,16 +124,26 @@ public class Opciones extends javax.swing.JDialog {
                                     .addGroup(jPanel1Layout.createSequentialGroup()
                                         .addComponent(etiquetaConexMax)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(cajaConexMax))))))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(151, 151, 151)
-                        .addComponent(botonVolver)))
+                                        .addComponent(cajaConexMax))
+                                    .addComponent(etiquetaIPServidor)
+                                    .addComponent(etiquetaIPCliente)
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addComponent(etiquetaPuerto)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(cajaPuerto, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addGap(80, 80, 80)
+                                        .addComponent(botonAceptar)
+                                        .addGap(18, 18, 18)
+                                        .addComponent(botonCancelar))))))
+                    .addComponent(cajaIPServidor, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cajaIPCliente, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(tituloDialog)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -114,8 +154,22 @@ public class Opciones extends javax.swing.JDialog {
                     .addComponent(etiquetaTamBloque)
                     .addComponent(cajaTamBloque, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
-                .addComponent(botonVolver)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cajaIPServidor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(etiquetaIPServidor))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cajaIPCliente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(etiquetaIPCliente))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cajaPuerto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(etiquetaPuerto))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(botonAceptar)
+                    .addComponent(botonCancelar))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -125,24 +179,24 @@ public class Opciones extends javax.swing.JDialog {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     /**
-     * Método que captura los valores introducidos y los devuelve a la interfaz
+     * MÃ©todo que captura los valores introducidos y los devuelve a la interfaz
      * @param evt
      */
-    private void botonVolverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonVolverActionPerformed
+    private void botonAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonAceptarActionPerformed
         int _tam = 0, _conex = 0;
 
         // Si es mayor que 0, devolvemos el valor
@@ -151,7 +205,7 @@ public class Opciones extends javax.swing.JDialog {
         else
             _tam = 0;
 
-        // Lo mismo con las conexiones máximas
+        // Lo mismo con las conexiones mÃ¡ximas
         if(Integer.parseInt(cajaConexMax.getText()) > 0)
             _conex = Integer.parseInt(cajaConexMax.getText());
         else
@@ -159,14 +213,30 @@ public class Opciones extends javax.swing.JDialog {
 
         _interfaz.establecerOpciones(_tam, _conex);
         this.setVisible(false);
-    }//GEN-LAST:event_botonVolverActionPerformed
+    }//GEN-LAST:event_botonAceptarActionPerformed
+
+    /**
+     * MÃ©todo que deja los valores intactos, es decir, ignora los cambios
+     * introducidos en las cajas de texto
+     * @param evt
+     */
+    private void botonCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonCancelarActionPerformed
+        this.setVisible(false);
+    }//GEN-LAST:event_botonCancelarActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton botonVolver;
+    private javax.swing.JButton botonAceptar;
+    private javax.swing.JButton botonCancelar;
     private javax.swing.JTextField cajaConexMax;
+    private javax.swing.JTextField cajaIPCliente;
+    private javax.swing.JTextField cajaIPServidor;
+    private javax.swing.JTextField cajaPuerto;
     private javax.swing.JTextField cajaTamBloque;
     private javax.swing.JLabel etiquetaConexMax;
+    private javax.swing.JLabel etiquetaIPCliente;
+    private javax.swing.JLabel etiquetaIPServidor;
+    private javax.swing.JLabel etiquetaPuerto;
     private javax.swing.JLabel etiquetaTamBloque;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel tituloDialog;

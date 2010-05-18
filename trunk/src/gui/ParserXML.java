@@ -5,6 +5,7 @@ import cliente.infoArchivo;
 import cliente.parteArchivo;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,7 +29,7 @@ public class ParserXML {
 
     private Document DOM;
     //private List listadoDescargas = new ArrayList();
-    private EstrArchivo[] archivosUsuario;
+    private EstrArchivo[] eas;
     private String nombreFichero;
 
     // Etiquetas del archivo XML
@@ -74,13 +75,13 @@ public class ParserXML {
      * Esta función parsea el archivo XML y extrae los datos de él
      * @param listaFicherosCompartidos para poder acceder al JList
      */
-    public EstrArchivo[] parsearDocumento(javax.swing.DefaultListModel lista) {
+    public void parsearDocumento(javax.swing.DefaultListModel lista, ArrayList<EstrArchivo> eas) {
         Element docEle = DOM.getDocumentElement(); // Obtiene el documento raiz
         // Buscamos el nodo de más alto nivel: <archivo></archivo>
         NodeList nl = docEle.getElementsByTagName(ETIQUETA_ARCHIVO);
 
         // Creamos un vector de archivos de tantas dimensiones como archivos haya en el XML
-        archivosUsuario = new EstrArchivo[nl.getLength()];
+        eas = new ArrayList<EstrArchivo>();
 
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
@@ -99,7 +100,7 @@ public class ParserXML {
                     Element rutaElemento = (Element) nodoRuta.item(0);
                     //archivosUsuario[i].info.ruta = rutaElemento.getFirstChild().getNodeValue();
                     String ruta = rutaElemento.getFirstChild().getNodeValue();
-                    lista.addElement(ruta + "/" + nombre); // Con esto se añade a la interfaz
+                    lista.addElement(ruta); // Con esto se añade a la interfaz
 
                     // Obtenemos el valor de la etiqueta <tam></tam>
                     NodeList nodoTam = elementoRaiz.getElementsByTagName(ETIQUETA_TAM);
@@ -121,17 +122,6 @@ public class ParserXML {
                     // Creamos la información referente al nuevo archivo
                     infoArchivo info = new infoArchivo(ruta, nombre, tam, checksum);
 
-                    // Creamos la información referente a las partes
-                    parteArchivo[] piezas = new parteArchivo[1];
-                    piezas[0] = new parteArchivo();
-                    piezas[0].inicio = 0;
-                    piezas[0].fin = tam;
-                    piezas[0].pedido = false;
-                    piezas[0].descargado = false;
-
-                    // Reservamos memoria para el archivo i-ésimo
-                    archivosUsuario[i] = new EstrArchivo(info, piezas);
-
                     // Obtenemos el acceso al nodo cuya etiqueta es <peers></peers>
                     NodeList nodoPeers = elementoRaiz.getElementsByTagName(ETIQUETA_PEERS);
                     Element peerElemento = (Element) nodoPeers.item(0);
@@ -141,20 +131,24 @@ public class ParserXML {
                     // Iteramos por cada uno de los nodos <parte></parte> que hay
                     // Hacemos mas eficiente la consulta hacia el número de partes
                     int numPartes = nodoParte.getLength();
-                    archivosUsuario[i].partes = new parteArchivo[numPartes];
+                    parteArchivo[] partes = new parteArchivo[numPartes];
+                    
                     for (int j=0; j<numPartes; j=j+2) {
-                        int k = j + 1; // Para el índice
                         // Reservamos memoria para la nueva parte
-                        archivosUsuario[i].partes[j] = new parteArchivo();
+                        partes[j] = new parteArchivo();
                         // Insertamos el inicio y fin de cada parte
-                        archivosUsuario[i].partes[j].inicio = Long.parseLong(nodoParte.item(j).getFirstChild().getNodeValue());
-                        archivosUsuario[i].partes[j].fin = Long.parseLong(nodoParte.item(k).getFirstChild().getNodeValue());
-                        //System.out.println("Inicio: " + archivosUsuario[i].partes[j].inicio);
-                        //System.out.println("Fin: " + archivosUsuario[i].partes[j].fin);
-                    }                   
+                        partes[j].inicio = Long.parseLong(nodoParte.item(j).getFirstChild().getNodeValue());
+                        partes[j].fin = Long.parseLong(nodoParte.item(j+1).getFirstChild().getNodeValue());
+                        partes[j].pedido = false;
+                        partes[j].descargado = false;
+                    }
+                    
+                    // Reservamos memoria para el archivo i-ésimo
+                    eas.add(new EstrArchivo(info, partes));
+                    
+                    
                 } // Fin del if(comprobacion es un nodo)
             } // Fin del for (int i = 0; i < nl.getLength(); i++)
         }
-        return archivosUsuario;
     }
 }
