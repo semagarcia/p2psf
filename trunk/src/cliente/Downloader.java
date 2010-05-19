@@ -163,9 +163,7 @@ public class Downloader extends Thread {
 		int usuario, i;
 		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
 		
-		System.out.println("bajando");
 		_escribir.bajar();
-		System.out.println("bajado");
 
 		//Crear hilos
 		

@@ -42,11 +42,13 @@ public class ArchivoImpl extends ArchivoPOA {
 		int i=0;
 		boolean encontrado=false;
 		
-		while(!encontrado && i<_peers.size())
+		while(!encontrado && i<_peers.size()) {
 			if(_peers.get(i)==id) {
 				encontrado=true;
 				_peers.remove(i);
 			}
+			else i++;
+		}
 	}
 
 	@Override
@@ -54,11 +56,13 @@ public class ArchivoImpl extends ArchivoPOA {
 		int i=0;
 		boolean encontrado=false;
 		
-		while(!encontrado && i<_seeds.size())
+		while(!encontrado && i<_seeds.size()) {
 			if(_seeds.get(i)==id) {
 				encontrado=true;
 				_seeds.remove(i);
 			}
+			else i++;
+		}
 	}
 
 	@Override
@@ -104,9 +108,19 @@ public class ArchivoImpl extends ArchivoPOA {
 			eliminarPeer(id);
 			insertarSeed(id);
 			
-			System.out.println("EL USUARIO "+id+" SE HA CONVERTIDO EN SEED");
 		}
 		else {
+			boolean encontrado=false;
+			int i=0;
+			
+			while(!encontrado && i<_peers.size()) {
+				if(_peers.get(i)==id) encontrado=true;
+				else i++;
+			}
+			if(!encontrado) {
+				_peers.add(id);
+			}
+			
 			_partes.put(id, partes);
 		}
 	}

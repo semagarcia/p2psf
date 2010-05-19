@@ -22,10 +22,7 @@ public class UsuarioClient {
 	
 	// Referencia al hilo de escucha del usuario
 	private UsuarioServer _hiloServer;
-	
-	// Array de descargas en curso
-	private ArrayList<Downloader> _descargas;
-	
+		
 	//Semáforo para escribir en la tabla _eas (información local de los archivos)
 	private Semaforo _accederEas;
 
@@ -40,7 +37,6 @@ public class UsuarioClient {
 		_coord=null;
 		_id=-1;
 		_eas=new Hashtable<String, EstrArchivo>();
-		_descargas=new ArrayList<Downloader>();
 		_accederEas=new Semaforo(1);
 		_ipservidor=ipservidor;
 		_iplocal=iplocal;
@@ -162,9 +158,10 @@ public class UsuarioClient {
 
 	public Downloader descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta) {
 		//lanza el hilo de descarga para el archivo
-		Downloader d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas);
-		d.start();
-		_descargas.add(d);
+		Downloader d=null;
+		
+		if(_id!=-1)
+			d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas);
 		
 		return d;
 	}
