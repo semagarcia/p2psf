@@ -8,7 +8,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
 /**
- * Clase que bla, bla, bla... 
+ * Clase que crea el menú Popup (contextual) sobre la tabla de descargas
  * @author sema
  */
 public class MenuContextual extends JFrame {
