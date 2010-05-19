@@ -4,9 +4,11 @@ import cliente.EstrArchivo;
 import cliente.infoArchivo;
 import cliente.parteArchivo;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.table.DefaultTableModel;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -55,30 +57,40 @@ public class ParserXML {
     /**
      * Esta función se encarga de generar un documento o arbol XML en memoria a
      * partir de un fichero dado
+     * @throws IOException 
+     * @throws ParserConfigurationException 
+     * @throws SAXException 
      */
-    public void parsearArchivoXML() {
-        
-        try {
-            // Se instancia una factoría para crear el parser
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            // Se utiliza la factoría para crear el parser y utilizarlo
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            DOM = db.parse("src/gui/" + nombreFichero); // Parseamos el archivo XML
-        } catch (ParserConfigurationException pce) { pce.printStackTrace();
-        } catch (SAXParseException spe) { System.out.println("Excepction SAX Parse: XML mal formado");
-        } catch (SAXException se) { se.printStackTrace(); System.out.println("Excepcion SAX");
-        } catch (IOException ioe) { ioe.printStackTrace(); }
+    public void parsearArchivoXML() throws IOException, ParserConfigurationException, SAXException {
+    	DocumentBuilderFactory dbf; 
+    	DocumentBuilder db;
+
+    	// Se instancia una factoría para crear el parser
+        dbf = DocumentBuilderFactory.newInstance();
+        // Se utiliza la factoría para crear el parser y utilizarlo
+        db = dbf.newDocumentBuilder();
+
+    	try {
+            DOM = db.parse(nombreFichero); // Parseamos el archivo XML
+        }
+        catch (IOException ioe) {
+        	Biblioteca b=new Biblioteca();
+        	b.guardarXML();
+        	DOM = db.parse(nombreFichero); // Parseamos el archivo XML
+        }
     }
 
     
     /**
      * Esta función parsea el archivo XML y extrae los datos de él
+     * @param modeloTablaDescargas 
      * @param listaFicherosCompartidos para poder acceder al JList
      */
-    public void parsearDocumento(javax.swing.DefaultListModel lista, ArrayList<EstrArchivo> eas) {
+    public ArrayList<EstrArchivo> parsearDocumento(javax.swing.DefaultListModel listaCompartidos, ClienteP2P interfaz) {
         Element docEle = DOM.getDocumentElement(); // Obtiene el documento raiz
         // Buscamos el nodo de más alto nivel: <archivo></archivo>
         NodeList nl = docEle.getElementsByTagName(ETIQUETA_ARCHIVO);
+        ArrayList<EstrArchivo> eas=new ArrayList<EstrArchivo>();
 
         // Creamos un vector de archivos de tantas dimensiones como archivos haya en el XML
         eas = new ArrayList<EstrArchivo>();
@@ -100,7 +112,6 @@ public class ParserXML {
                     Element rutaElemento = (Element) nodoRuta.item(0);
                     //archivosUsuario[i].info.ruta = rutaElemento.getFirstChild().getNodeValue();
                     String ruta = rutaElemento.getFirstChild().getNodeValue();
-                    lista.addElement(ruta); // Con esto se añade a la interfaz
 
                     // Obtenemos el valor de la etiqueta <tam></tam>
                     NodeList nodoTam = elementoRaiz.getElementsByTagName(ETIQUETA_TAM);
@@ -117,7 +128,7 @@ public class ParserXML {
                     // Obtenemos el valor de la etiqueta <seed></seed>
                     NodeList nodoSeed = elementoRaiz.getElementsByTagName(ETIQUETA_SEEDS);
                     Element seedElemento = (Element) nodoSeed.item(0);
-                    // Con el campo seed del XML que hacemos?? para que lo recuperamos??
+                    boolean seed = Boolean.parseBoolean(seedElemento.getFirstChild().getNodeValue());
                     
                     // Creamos la información referente al nuevo archivo
                     infoArchivo info = new infoArchivo(ruta, nombre, tam, checksum);
@@ -131,24 +142,30 @@ public class ParserXML {
                     // Iteramos por cada uno de los nodos <parte></parte> que hay
                     // Hacemos mas eficiente la consulta hacia el número de partes
                     int numPartes = nodoParte.getLength();
-                    parteArchivo[] partes = new parteArchivo[numPartes];
-                    
+                    parteArchivo[] partes = new parteArchivo[numPartes/2];
+
+                    long descargado=0; //para calcular el porcentaje
                     for (int j=0; j<numPartes; j=j+2) {
                         // Reservamos memoria para la nueva parte
-                        partes[j] = new parteArchivo();
+                        partes[j/2] = new parteArchivo();
                         // Insertamos el inicio y fin de cada parte
-                        partes[j].inicio = Long.parseLong(nodoParte.item(j).getFirstChild().getNodeValue());
-                        partes[j].fin = Long.parseLong(nodoParte.item(j+1).getFirstChild().getNodeValue());
-                        partes[j].pedido = false;
-                        partes[j].descargado = false;
+                        partes[j/2].inicio = Long.parseLong(nodoParte.item(j).getFirstChild().getNodeValue());
+                        partes[j/2].fin = Long.parseLong(nodoParte.item(j+1).getFirstChild().getNodeValue());
+                        partes[j/2].pedido = false;
+                        partes[j/2].descargado = false;
+                        
+                        descargado+=partes[j/2].fin-partes[j/2].inicio;
                     }
                     
                     // Reservamos memoria para el archivo i-ésimo
                     eas.add(new EstrArchivo(info, partes));
-                    
+
+                    if(seed) listaCompartidos.addElement(ruta); // Con esto se añade a la interfaz
+                    else interfaz.nuevaDescarga(nombre, ruta, tam, checksum, (int)(descargado*100/tam));
                     
                 } // Fin del if(comprobacion es un nodo)
             } // Fin del for (int i = 0; i < nl.getLength(); i++)
         }
+        return eas;
     }
 }
