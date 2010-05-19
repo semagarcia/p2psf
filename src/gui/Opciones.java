@@ -249,6 +249,10 @@ public class Opciones extends javax.swing.JDialog {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		javax.swing.JOptionPane.showMessageDialog(this,
+				"Para que los cambios surtan efecto debe reiniciar la aplicación.");
+		
         this.setVisible(false);
     }//GEN-LAST:event_botonAceptarActionPerformed
 

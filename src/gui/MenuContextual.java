@@ -1,11 +1,14 @@
 package gui;
 
 import java.awt.event.*;
+import java.util.Hashtable;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+
+import cliente.Downloader;
 
 /**
  * Clase que crea el menú Popup (contextual) sobre la tabla de descargas
@@ -21,8 +24,10 @@ public class MenuContextual extends JFrame {
     private String _iniciarDescarga = "Iniciar descarga";
     private String _pausarDescarga = "Pausar descarga";
     private String _cancelarDescarga = "Cancelar descarga";
+	private Hashtable<String, Downloader> _descargasActuales;
+	protected int _filaSeleccionada;
   
-    public MenuContextual(JTable tabla) {
+    public MenuContextual(JTable tabla, Hashtable<String, Downloader> descargasActuales) {
    	 _miTabla = tabla; // Referencia a la tabla descargas
    	 
    	 // Creamos un Hastable para mantener las descargas que están iniciadas o pausadas
@@ -37,8 +42,8 @@ public class MenuContextual extends JFrame {
    	 
 	    // Primera opcion: iniciar una descarga
 	    _iniciar = new JMenuItem(_iniciarDescarga);
-   	 _iniciar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/iniciar.png")));
-   	 _iniciar.addActionListener(new ManejadorEventosMenu(this));
+   	 	_iniciar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/iniciar.png")));
+   	 	_iniciar.addActionListener(new ManejadorEventosMenu(this));
 	    _menuPopup.add(_iniciar);
 
 	    // Segunda opcion: pausar una descarga
@@ -55,6 +60,10 @@ public class MenuContextual extends JFrame {
 	    
 	    // Para añadir un listener específico a la cabecera	    
 	    //_miTabla.getTableHeader().addMouseListener(_listenerPopup);
+	    
+	    desconectar();
+	    
+	    _descargasActuales=descargasActuales;
     }
 
     /**
@@ -69,11 +78,11 @@ public class MenuContextual extends JFrame {
 
    	 private void mostrarMenuPopup(MouseEvent e) {
    		 if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
-   		 System.out.println("Fila: " + _miTabla.rowAtPoint(e.getPoint()));
+   			 _filaSeleccionada=_miTabla.rowAtPoint(e.getPoint());
    			 _menuPopup.show(e.getComponent(), e.getX(), e.getY());
    		 } else if(e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
-             int fila = _miTabla.rowAtPoint(e.getPoint());
-             _miTabla.setRowSelectionInterval(fila, fila);
+             _filaSeleccionada= _miTabla.rowAtPoint(e.getPoint());
+             _miTabla.setRowSelectionInterval(_filaSeleccionada, _filaSeleccionada);
    		 }
    	 }
     } // Fin de la clase ListenerPopup
@@ -85,7 +94,9 @@ public class MenuContextual extends JFrame {
    	 if(e.getActionCommand().equals(_iniciarDescarga)) {
    		 _iniciar.setEnabled(false); // Al pulsar sobre iniciar se deshabilita
    		 _pausar.setEnabled(true); // Y se habilita pausar para poder pausarla
-   		 System.out.println("Amo con una nueva descarga...");
+   		 
+   		 _descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).start();
+   		 
    	 } else if(e.getActionCommand().equals(_pausarDescarga)) {
    		 _iniciar.setEnabled(true); // Al pulsar sobre pausar se deshabilita
    		 _pausar.setEnabled(false); // Y se habilita iniciar para poder continuar
@@ -94,6 +105,22 @@ public class MenuContextual extends JFrame {
    		 System.out.println("Uy, seguro que quieres cancelarla?");
    	 }
     }
+
+    /**
+     * 
+     */
+	public void conectar() {
+   	 	_iniciar.setEnabled(true);
+	    _pausar.setEnabled(false);
+	}
+
+    /**
+     * 
+     */
+	public void desconectar() {
+   	 	_iniciar.setEnabled(false);
+	    _pausar.setEnabled(false);
+	}
 } // Final de la clase MenuContextual
 
 /**

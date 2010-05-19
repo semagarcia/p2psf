@@ -20,8 +20,8 @@ public class Semaforo {
 				e.printStackTrace();
 			}
 		}
-
 		_contador--;
+		System.out.println("OCUPA: "+_contador+"/"+_inicial);
 	}
 	
 	
@@ -30,6 +30,7 @@ public class Semaforo {
 			notifyAll();
 
 		_contador++;
+		System.out.println("LIBERA: "+_contador+"/"+_inicial);
 	}
 	
 	

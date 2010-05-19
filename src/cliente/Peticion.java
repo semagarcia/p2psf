@@ -83,10 +83,7 @@ public class Peticion extends Thread {
 	private void anyadirParte() {
 		int i=0, j;
 		
-		System.out.println("BAJANDO");
 		_accederEas.bajar();
-		System.out.println("BAJADO");
-
 		
 		//Anyade el archivo a eas si no existía
 		if(_eas.get(_nombre)==null) {
@@ -153,7 +150,7 @@ public class Peticion extends Thread {
 		}
 		
 		_arch.actualizarPartes(_miId, _eas.get(_nombre).partes);
-				
+		
 		_accederEas.subir();
 	}
 

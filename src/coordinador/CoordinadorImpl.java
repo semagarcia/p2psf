@@ -63,10 +63,16 @@ public class CoordinadorImpl extends CoordinadorPOA {
 
 			Archivo aux=buscar(eas[i].info.nombre);
 			if(aux!=null) {
-				if(eas[i].partes[0].fin-eas[i].partes[0].inicio==eas[i].info.tam)
+				if(eas[i].partes[0].fin-eas[i].partes[0].inicio==eas[i].info.tam) {
+					
+				System.out.println("ELIMINANDO SEED");
 					aux.eliminarSeed(idUsuario);
-				else
+				System.out.println("SEED ELIMINADO");
+				}
+				else {
+				System.out.println("ELIMINANDO PEER");
 					aux.eliminarPeer(idUsuario);
+				}
 			
 				System.out.println("eliminado usuario.");
 				

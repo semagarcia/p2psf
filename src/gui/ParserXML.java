@@ -158,10 +158,11 @@ public class ParserXML {
                     }
                     
                     // Reservamos memoria para el archivo i-ésimo
-                    eas.add(new EstrArchivo(info, partes));
+                    EstrArchivo e=new EstrArchivo(info, partes);
+                    eas.add(e);
 
                     if(seed) listaCompartidos.addElement(ruta); // Con esto se añade a la interfaz
-                    else interfaz.nuevaDescarga(nombre, ruta, tam, checksum, (int)(descargado*100/tam));
+                    else interfaz.nuevaDescarga(e, (int)(descargado*100/tam));
                     
                 } // Fin del if(comprobacion es un nodo)
             } // Fin del for (int i = 0; i < nl.getLength(); i++)
