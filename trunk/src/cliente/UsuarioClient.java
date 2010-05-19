@@ -72,8 +72,11 @@ public class UsuarioClient {
 			}
 		}
 
-		if(_id!=-1)
-			_coord.anyadirArchivos((EstrArchivo[]) aux.toArray(), _id);
+		if(_id!=-1) {
+			EstrArchivo[] enviar=new EstrArchivo[aux.size()];
+			aux.toArray(enviar);
+			_coord.anyadirArchivos(enviar, _id);
+		}
 		
 		_accederEas.subir();
 	}

@@ -38,7 +38,7 @@ public class Biblioteca {
     private static final String JAVA_ENCODING = "UTF-8";
 
     // Nombre del archivo
-    private static final String NOMBRE_ARCHIVO_XML = "src/gui/MiBiblioteca.xml";
+    private static final String NOMBRE_ARCHIVO_XML = "MiBiblioteca.xml";
 
     // Objetos
     private Document documentoXML = null;
