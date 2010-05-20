@@ -4,14 +4,13 @@ public class Semaforo {
 	private int _contador;
 	private final int _inicial;
 	
-	
 	public Semaforo(int n) {
 		_contador=n;
 		_inicial=n;
 	}
 
 	
-	public synchronized void bajar() {
+	public synchronized void bajar(String cadena) {
 		while(_contador==0) {
 			try {
 				wait();
@@ -21,16 +20,15 @@ public class Semaforo {
 			}
 		}
 		_contador--;
-		System.out.println("OCUPA: "+_contador+"/"+_inicial);
 	}
 	
 	
-	public synchronized void subir() {
-		if(_contador==0)
+	public synchronized void subir(String cadena) {
+		if(_contador==0) {
 			notifyAll();
+			}
 
 		_contador++;
-		System.out.println("LIBERA: "+_contador+"/"+_inicial);
 	}
 	
 	

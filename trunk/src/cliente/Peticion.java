@@ -68,22 +68,22 @@ public class Peticion extends Thread {
 		
 		parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
 		
-		_escribir.bajar();
+		_escribir.bajar("run(Peticion)");
 		escribir(parte);
-		anyadirParte();
+		anyadirParte();  //utiliza semaforo EAS
 		_pieza.descargado=true;
 		_pieza.pedido=false;
 		_usuarios.put(_idUsuario, false);
-		_escribir.subir();
+		_escribir.subir("run(Peticion)");
 
-		_lanzados.subir();
+		_lanzados.subir("run(Peticion)");
 	}
 
 	
 	private void anyadirParte() {
 		int i=0, j;
 		
-		_accederEas.bajar();
+		_accederEas.bajar("anyadirParte(Peticion)");
 		
 		//Anyade el archivo a eas si no existía
 		if(_eas.get(_nombre)==null) {
@@ -134,9 +134,12 @@ public class Peticion extends Thread {
 			
 			for(i=0;i<nuevo.length-1;i++) {
 				j=i+1;
-				while(j<nuevo.length) {
+				boolean salir=false;
+				while(j<nuevo.length && !salir) {
 					if(nuevo[j].inicio<=nuevo[i].fin)
 						j++;
+					else
+						salir=true;
 				}
 				aux=new parteArchivo();
 				aux.inicio=nuevo[i].inicio;
@@ -151,7 +154,7 @@ public class Peticion extends Thread {
 		
 		_arch.actualizarPartes(_miId, _eas.get(_nombre).partes);
 		
-		_accederEas.subir();
+		_accederEas.subir("anyadirParte(Peticion)");
 	}
 
 

@@ -31,9 +31,9 @@ public class UsuarioImpl extends UsuarioPOA {
 	@Override
 	public byte[] solicitarParte(String nombre, long inicio, long fin) {
 		
-		_accederEas.bajar();
+		_accederEas.bajar("solicitarParte(UsuarioImpl)");
 		File fichero=new File(_eas.get(nombre).info.ruta);
-		_accederEas.subir();
+		_accederEas.subir("solicitarParte(UsuarioImpl)");
 		
 		int tam=(int)(fin-inicio);
 		byte[] b=null;
