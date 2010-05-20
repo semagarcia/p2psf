@@ -10,7 +10,7 @@ public class UsuarioServer extends Thread {
 
 	private UsuarioImpl _usuImpl;
 
-	public UsuarioServer(String[] args, Hashtable eas, Semaforo accederEas) {
+	public UsuarioServer(String[] args, Hashtable<String, EstrArchivo> eas, Semaforo accederEas) {
 		try {
 			// Inicialiación del ORB
 			JavaORB middleware = new JavaORB();
@@ -20,8 +20,6 @@ public class UsuarioServer extends Thread {
 			// Crear el Sirviente
 			_usuImpl= new UsuarioImpl(eas, accederEas);
 			
-_usuImpl.set();
-				
 			// Obtener una referencia CORBA del Sirviente
 			Object ref = Middleware.interfazSirviente(Usuario.class,_usuImpl);
 
