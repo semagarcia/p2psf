@@ -65,7 +65,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     
     private UsuarioClient _cliente;
     
-    private ArrayList<EstrArchivo> _easTmp; 
+    private ArrayList<EstrArchivo> _easTmp;
     
     
     /** Creates new form ClienteP2P */

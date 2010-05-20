@@ -28,9 +28,9 @@ public class UsuarioClient {
 
 	private String _ipservidor;
 
-	private String _iplocal;
-
 	private int _puerto;
+
+	private String _iplocal;
 
 	
 	public UsuarioClient(String ipservidor, String iplocal, int puerto) throws MiddlewareException {
@@ -42,7 +42,7 @@ public class UsuarioClient {
 		_iplocal=iplocal;
 		_puerto=puerto;
 
-		String args[]={"-ORBInitialPort",String.valueOf(puerto)};
+		String args[]={"-ORBInitialPort",String.valueOf(_puerto),"-ORBInitialHost",_ipservidor};
 		
 		//Inicialiación del ORB
 		JavaORB middleware = new JavaORB();
@@ -99,7 +99,7 @@ public class UsuarioClient {
 		
 		if(!conectado) {
 			// Crea el hilo de escucha
-			String[] parametros={"-ORBInitialPort",String.valueOf(_puerto)};
+			String[] parametros={"-ORBInitialPort",String.valueOf(_puerto),"-ORBInitialHost",_ipservidor,"-ORBServerHost",_iplocal};
 			_hiloServer=new UsuarioServer(parametros, _eas, _accederEas);
 			_hiloServer.start();
 

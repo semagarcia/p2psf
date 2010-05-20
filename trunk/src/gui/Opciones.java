@@ -68,8 +68,6 @@ public class Opciones extends javax.swing.JDialog {
         botonAceptar = new javax.swing.JButton();
         etiquetaIPServidor = new javax.swing.JLabel();
         cajaIPServidor = new javax.swing.JTextField();
-        etiquetaIPCliente = new javax.swing.JLabel();
-        cajaIPCliente = new javax.swing.JTextField();
         etiquetaPuerto = new javax.swing.JLabel();
         cajaPuerto = new javax.swing.JTextField();
         etiquetaRuta= new javax.swing.JLabel();
@@ -106,10 +104,10 @@ public class Opciones extends javax.swing.JDialog {
         cajaIPServidor.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaIPServidor.setText(_ipservidor);
 
-        etiquetaIPCliente.setText("Dirección IP del cliente P2PSF");
+        etiquetaIPLocal.setText("Dirección IP local");
 
-        cajaIPCliente.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
-        cajaIPCliente.setText(_iplocal);
+        cajaIPLocal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        cajaIPLocal.setText(_iplocal);
 
         etiquetaPuerto.setText("Puerto a través del cual se va a conectar");
 
@@ -139,7 +137,7 @@ public class Opciones extends javax.swing.JDialog {
                     .addComponent(etiquetaTamBloque)
                     .addComponent(etiquetaConexMax)
                     .addComponent(etiquetaIPServidor)
-                    .addComponent(etiquetaIPCliente)
+                    .addComponent(etiquetaIPLocal)
                     .addComponent(etiquetaPuerto)
                     .addComponent(etiquetaRuta))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -148,7 +146,7 @@ public class Opciones extends javax.swing.JDialog {
                     .addComponent(cajaConexMax, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
                     .addComponent(cajaTamBloque, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
                     .addComponent(cajaIPServidor, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                    .addComponent(cajaIPCliente, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+                    .addComponent(cajaIPLocal, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
                     .addComponent(cajaPuerto, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE))
                 .addContainerGap())
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
@@ -175,8 +173,8 @@ public class Opciones extends javax.swing.JDialog {
                     .addComponent(cajaIPServidor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(etiquetaIPCliente)
-                    .addComponent(cajaIPCliente, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(etiquetaIPLocal)
+                    .addComponent(cajaIPLocal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(etiquetaPuerto)
@@ -231,10 +229,10 @@ public class Opciones extends javax.swing.JDialog {
         
         // Direccion IP del Servidor
         _ipservidor = cajaIPServidor.getText();
-        
-        // Direccion IP del cliente
-        _iplocal = cajaIPCliente.getText();
-        
+
+        // Direccion IP local
+        _iplocal = cajaIPLocal.getText();
+
         // Puerto
         if(Integer.parseInt(cajaPuerto.getText()) > 0)
            _puerto = Integer.parseInt(cajaPuerto.getText());
@@ -270,14 +268,14 @@ public class Opciones extends javax.swing.JDialog {
     private javax.swing.JButton botonAceptar;
     private javax.swing.JButton botonCancelar;
     private javax.swing.JTextField cajaConexMax;
-    private javax.swing.JTextField cajaIPCliente;
     private javax.swing.JTextField cajaIPServidor;
+    private javax.swing.JTextField cajaIPLocal;
     private javax.swing.JTextField cajaPuerto;
     private javax.swing.JTextField cajaRuta;
     private javax.swing.JTextField cajaTamBloque;
     private javax.swing.JLabel etiquetaConexMax;
-    private javax.swing.JLabel etiquetaIPCliente;
     private javax.swing.JLabel etiquetaIPServidor;
+    private javax.swing.JLabel etiquetaIPLocal;
     private javax.swing.JLabel etiquetaPuerto;
     private javax.swing.JLabel etiquetaRuta;
     private javax.swing.JLabel etiquetaTamBloque;

@@ -15,6 +15,7 @@ public class Peticion extends Thread {
 	private Usuario _usuario;
 	private String _nombre;
 	private parteArchivo _pieza;
+	private Downloader _downloader;
 	private Semaforo _lanzados;
 	private Semaforo _escribir;
 	private Semaforo _accederEas;
@@ -45,13 +46,14 @@ public class Peticion extends Thread {
 	}
 
 	
-	public Peticion(String ruta, Usuario usu, String nombre, long tam, long checksum, parteArchivo pieza, Semaforo lanzados, Semaforo escribir, Hashtable<Integer, Boolean> usuarios, int idUsuario, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
+	public Peticion(String ruta, Usuario usu, String nombre, long tam, long checksum, parteArchivo pieza, Downloader downloader, Semaforo lanzados, Semaforo escribir, Hashtable<Integer, Boolean> usuarios, int idUsuario, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
 		_ruta=ruta;
 		_usuario=usu;
 		_nombre=nombre;
 		_tam=tam;
 		_checksum=checksum;
 		_pieza=pieza;
+		_downloader=downloader;
 		_lanzados=lanzados;
 		_escribir=escribir;
 		_usuarios=usuarios;
@@ -66,16 +68,23 @@ public class Peticion extends Thread {
 	public void run() {
 		byte[] parte;
 		
+try {
 		parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
 		
 		_escribir.bajar("run(Peticion)");
 		escribir(parte);
-		anyadirParte();  //utiliza semaforo EAS
+		anyadirParte();
+		_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
 		_pieza.descargado=true;
 		_pieza.pedido=false;
 		_usuarios.put(_idUsuario, false);
 		_escribir.subir("run(Peticion)");
+}
+catch(Exception e) {
+	System.out.println("\n\n\nEXCEPCION CAPTURADA\n\n\n");
+}
 
+		
 		_lanzados.subir("run(Peticion)");
 	}
 

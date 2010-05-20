@@ -20,6 +20,7 @@ public class Downloader extends Thread {
 	private Hashtable<String, EstrArchivo> _eas;
 	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
 	private int _miId;
+	private float _porcentaje;
 	
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
@@ -106,7 +107,7 @@ public class Downloader extends Thread {
 		Peticion p=null;
 		
 		try {
-			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), _arch.tam(), _arch.checksum(), pieza,_lanzados, _escribir, usuarios, idUsuario, _miId, _accederEas, _eas, _arch);
+			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), _arch.tam(), _arch.checksum(), pieza, this,_lanzados, _escribir, usuarios, idUsuario, _miId, _accederEas, _eas, _arch);
 		}
 		catch (MiddlewareException e) {
 			e.printStackTrace();
@@ -131,6 +132,7 @@ public class Downloader extends Thread {
 		_peersSolicitados=new Hashtable<Integer, Boolean>();
 		_accederEas=accederEas;
 		_eas=eas;
+		_porcentaje=new Float(0);
 		
 		calcularDescargas(partes);
 	}
@@ -147,6 +149,8 @@ public class Downloader extends Thread {
 				lanzarPeticiones();
 				i++;
 			}
+			
+			System.out.println("MOVER DESCARGADO A COMPARTIDOS");
 		}
 		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
 			System.out.println("OBJECT_NOT_EXIST");
@@ -281,5 +285,12 @@ public class Downloader extends Thread {
 		k=_peersSolicitados.keys();
 		while(k.hasMoreElements()) System.out.print(k.nextElement()+" ");
 		System.out.print("\n");
+	}
+
+
+
+	public void addPorcentaje(float l) {
+		_porcentaje+=l;
+		System.out.println("PONER "+Math.round(_porcentaje)+"% EN LA BARRA");
 	}
 }
