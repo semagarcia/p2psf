@@ -163,7 +163,7 @@ public class Downloader extends Thread {
 		int usuario, i;
 		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
 		
-		_escribir.bajar();
+		_escribir.bajar("lanzarPeticiones(Downloader)");
 
 		//Crear hilos
 		
@@ -202,11 +202,11 @@ public class Downloader extends Thread {
 			}
 		}
 		
-		_escribir.subir();
+		_escribir.subir("lanzarPeticiones(Downloader)");
 		
 		// Lanzar hilos
 		for(i=0;i<hilos.size();i++) {
-			_lanzados.bajar();
+			_lanzados.bajar(("lanzarPeticiones(Downloader)"));
 			hilos.get(i).start();
 		}
 
