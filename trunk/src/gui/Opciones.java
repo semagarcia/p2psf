@@ -11,6 +11,7 @@
 
 package gui;
 
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -68,6 +69,8 @@ public class Opciones extends javax.swing.JDialog {
         botonAceptar = new javax.swing.JButton();
         etiquetaIPServidor = new javax.swing.JLabel();
         cajaIPServidor = new javax.swing.JTextField();
+        etiquetaIPLocal= new javax.swing.JLabel();
+        cajaIPLocal = new javax.swing.JTextField();
         etiquetaPuerto = new javax.swing.JLabel();
         cajaPuerto = new javax.swing.JTextField();
         etiquetaRuta= new javax.swing.JLabel();
@@ -87,37 +90,107 @@ public class Opciones extends javax.swing.JDialog {
 
         cajaConexMax.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaConexMax.setText(String.valueOf(_nConex));
+        cajaConexMax.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
 
         cajaTamBloque.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaTamBloque.setText(String.valueOf(_tam));
-
-        botonAceptar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/ok.png"))); // NOI18N
-        botonAceptar.setText("¡Aceptar!");
-        botonAceptar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                botonAceptarActionPerformed(evt);
-            }
+        cajaTamBloque.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
         });
 
         etiquetaIPServidor.setText("Dirección IP del Servidor P2PSF");
 
         cajaIPServidor.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaIPServidor.setText(_ipservidor);
+        cajaIPServidor.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
 
         etiquetaIPLocal.setText("Dirección IP local");
 
         cajaIPLocal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaIPLocal.setText(_iplocal);
+        cajaIPLocal.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
 
         etiquetaPuerto.setText("Puerto a través del cual se va a conectar");
 
         cajaPuerto.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaPuerto.setText(String.valueOf(_puerto));
+        cajaPuerto.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
 
         etiquetaRuta.setText("Ruta para las descargas");
 
         cajaRuta.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         cajaRuta.setText(String.valueOf(_rutaDescargas));
+        cajaRuta.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
+
+        botonAceptar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/ok.png"))); // NOI18N
+        botonAceptar.setText("¡Aceptar!");
+        botonAceptar.addKeyListener(new java.awt.event.KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER) botonAceptarActionPerformed(null);
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {}
+			@Override
+			public void keyTyped(KeyEvent e) {}
+        });
+        botonAceptar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                botonAceptarActionPerformed(evt);
+            }
+        });
 
         botonCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/noOk.png"))); // NOI18N
         botonCancelar.setText("¡Cancelar!");
@@ -206,7 +279,7 @@ public class Opciones extends javax.swing.JDialog {
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-
+        
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -248,10 +321,12 @@ public class Opciones extends javax.swing.JDialog {
 			e.printStackTrace();
 		}
 		
-		javax.swing.JOptionPane.showMessageDialog(this,
-				"Para que los cambios surtan efecto debe reiniciar la aplicación.");
-		
         this.setVisible(false);
+        
+        if(_interfaz.conectado()) {
+        	_interfaz.opcionArchivoLogoutActionPerformed(null);
+        	_interfaz.opcionArchivoLoginActionPerformed(null);
+        }
     }//GEN-LAST:event_botonAceptarActionPerformed
 
     /**
