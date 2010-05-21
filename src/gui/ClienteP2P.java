@@ -22,11 +22,7 @@ import javax.swing.JProgressBar;
 import javax.swing.ListCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.xml.sax.SAXException;
-
-import middleware.MiddlewareException;
-
 import cliente.Downloader;
 import cliente.EstrArchivo;
 import cliente.UsuarioClient;
@@ -77,18 +73,11 @@ public class ClienteP2P extends javax.swing.JFrame {
     	
     	try {
 			cargarOpciones();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+		}
+    	catch (IOException e1) {
 			e1.printStackTrace();
 		}  	
-    	
-    	try {
-			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto);
-		}
-    	catch (MiddlewareException e) {
-			e.printStackTrace();
-		}
-    	
+    	    	
         // Inicialización de componentes: interfaz, escuchadores, manejadores...
         initComponents();
 
@@ -725,28 +714,30 @@ public class ClienteP2P extends javax.swing.JFrame {
      * que posee el usuario localmente y recibe el identificador que éste le envía
      * @param evt
      */
-    private void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLoginActionPerformed
-        
-    	try {
-        _conectado = _cliente.conectar(); 
-        }
-    	catch(Exception e) {
-    		javax.swing.JOptionPane.showMessageDialog(this,
-    				"Error: No se puede encontrar el servidor." +
-    				" Cambie los parámetros de conexión en el menú" +
-    				" \"Opciones\" y reinicie la aplicación.","Error de conexión", javax.swing.JOptionPane.ERROR_MESSAGE);
-    	}
+    public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLoginActionPerformed
+    	if(!_conectado) {
+    		try {
+    			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto);
+    			_conectado = _cliente.conectar();
+    		}
+    		catch(Exception e) {
+    			javax.swing.JOptionPane.showMessageDialog(this,
+    					"Error: No se puede encontrar el servidor." +
+    					" Cambie los parámetros de conexión en el menú" +
+    					" \"Opciones\" e inténtelo de nuevo.","Error de conexión", javax.swing.JOptionPane.ERROR_MESSAGE);
+    		}
 
-        if(_conectado) {
-        	cambiarEstado("");
-        	iconConectar.setEnabled(false);
-        	iconDesconectar.setEnabled(true);
-        	botonBuscar.setEnabled(true);
+    		if(_conectado) {
+    			cambiarEstado("");
+    			iconConectar.setEnabled(false);
+    			iconDesconectar.setEnabled(true);
+    			botonBuscar.setEnabled(true);
         	
-        	//Deshabilitar acciones descargas
-        	_menuContextual.conectar();
-        	cambiarEstado("");
-        }
+    			//Deshabilitar acciones descargas
+    			_menuContextual.conectar();
+    			cambiarEstado("");
+    		}
+    	}
     }//GEN-LAST:event_opcionArchivoLoginActionPerformed
 
     /**
@@ -762,26 +753,24 @@ public class ClienteP2P extends javax.swing.JFrame {
      * Cuando se quiera desconectar el usuario, debe comunicarselo al coordinador
      * @param evt
      */
-    private void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLogoutActionPerformed
-//        actualizarDescarga("Prueba2", 30);
-    	_conectado = !_cliente.desconectar();
+    public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLogoutActionPerformed
+    	if(_conectado) {
+    		_conectado = !_cliente.desconectar();
+    		_cliente=null;
     	
-    	if(!_conectado) {
-    		cambiarEstado("");
-        	iconConectar.setEnabled(true);
-        	iconDesconectar.setEnabled(false);
-        	botonBuscar.setEnabled(false);
+    		if(!_conectado) {
+    			cambiarEstado("");
+    			iconConectar.setEnabled(true);
+    			iconDesconectar.setEnabled(false);
+    			botonBuscar.setEnabled(false);
         	
-        	//Deshabilitar acciones descargas
-        	_menuContextual.desconectar();
+    			//Deshabilitar acciones descargas
+    			_menuContextual.desconectar();
         	
-        	
-        	limpiarResultadosBusqueda();
+    			limpiarResultadosBusqueda();
+    		}
+    		else cambiarEstado("Error al desconectar.");
     	}
-    	else cambiarEstado("Error al desconectar.");
-
-    	
-        
     }//GEN-LAST:event_opcionArchivoLogoutActionPerformed
 
 
@@ -887,7 +876,6 @@ public class ClienteP2P extends javax.swing.JFrame {
      */
     @SuppressWarnings("deprecation")
 	private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonBuscarActionPerformed
-    	
     	if(_conectado) {
     		if(_hiloBusqueda!=null)
     			_hiloBusqueda.stop();            	
@@ -897,7 +885,6 @@ public class ClienteP2P extends javax.swing.JFrame {
     		_hiloBusqueda.setNombre(cajaTextoNomFich.getText());
     		_hiloBusqueda.start(); // Lanza el hilo
     	}
-    	
     }//GEN-LAST:event_botonBuscarActionPerformed
 
     /**
@@ -1023,7 +1010,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         else // Error al guardar el archivo
             resultado+="Error al generar el archivo \""+_nombreBiblioteca+"\"";
         
-        _cliente.anyadir(_easTmp);
+        if(_conectado)
+        	_cliente.anyadir(_easTmp);
         
         javax.swing.JOptionPane.showMessageDialog(this,resultado);
     }//GEN-LAST:event_actualizarBibliotecaMouseClicked
@@ -1062,13 +1050,10 @@ public class ClienteP2P extends javax.swing.JFrame {
         	try {
 				parser.parsearArchivoXML();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (SAXException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -1078,7 +1063,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         // es debido a un XML mal formado. Opciones adicionales:
         _easTmp=parser.parsearDocumento(_modeloListaRecursos, this);
         
-        _cliente.anyadir(_easTmp);
+        if(_conectado)
+        	_cliente.anyadir(_easTmp);
     }
 
     
@@ -1109,13 +1095,15 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param c Porcentaje completado
      */
     public void nuevaDescarga(Archivo a, parteArchivo[] partes, int p) {
-    	String ruta=_rutaDescargas+a.nombre();
-    	Downloader d;
+    	if(_conectado) {
+    		String ruta=_rutaDescargas+a.nombre();
+    		Downloader d;
     	
-        _dm.addRow(new Object[]{a.nombre(), ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
-        d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta);
-        if(d!=null)
-        	_descargasActuales.put(ruta, d);
+    		_dm.addRow(new Object[]{a.nombre(), ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
+    		d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta);
+    		if(d!=null)
+    			_descargasActuales.put(ruta, d);
+    	}
     }
     
     //Metodo para anyadir las descargas activas al iniciar la aplicación
@@ -1150,9 +1138,18 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        entrada.close();
 		}
         catch (FileNotFoundException e) {
-	        File f=new File("./Descargas/");
-	        if(!f.isDirectory()) f.mkdir();
-	    	establecerOpciones(1048576, 10, "127.0.0.1", "127.0.0.1", 2000, "./Descargas/");
+        	//Si no encuentra el fichero de configuración muestra el diálogo para introducir
+        	//las opciones con unos parámetros por defecto.
+	        _tamBloque=1048576;
+	        _conexionesMaximas=10;
+	        _ipservidor="127.0.0.1";
+	        _iplocal="127.0.0.1";
+	        _puerto=2000;
+	        _rutaDescargas="./Descargas";
+	        javax.swing.JOptionPane.showMessageDialog(this,
+	        		"Debe establecer las opciones de configuración",
+	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
+        	opcionArchivoOpcionesActionPerformed(null);
 		}
         
 	}
@@ -1284,4 +1281,9 @@ public class ClienteP2P extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator separadorArchivo;
     private javax.swing.JLabel valorEstadoActual;
     // End of variables declaration//GEN-END:variables
+
+
+	public boolean conectado() {
+		return _conectado;
+	}
 }
