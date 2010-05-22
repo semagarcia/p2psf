@@ -1,8 +1,12 @@
 package cliente;
 
+import gui.ClienteP2P;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+
+import javax.swing.JProgressBar;
 
 import middleware.JavaORB;
 import middleware.Middleware;
@@ -32,8 +36,10 @@ public class UsuarioClient {
 
 	private String _iplocal;
 
+	private ClienteP2P _interfaz;
+
 	
-	public UsuarioClient(String ipservidor, String iplocal, int puerto) throws MiddlewareException {
+	public UsuarioClient(String ipservidor, String iplocal, int puerto, ClienteP2P interfaz) throws MiddlewareException {
 		_coord=null;
 		_id=-1;
 		_eas=new Hashtable<String, EstrArchivo>();
@@ -41,6 +47,7 @@ public class UsuarioClient {
 		_ipservidor=ipservidor;
 		_iplocal=iplocal;
 		_puerto=puerto;
+		_interfaz=interfaz;
 
 		String args[]={"-ORBInitialPort",String.valueOf(_puerto),"-ORBInitialHost",_ipservidor};
 		
@@ -156,12 +163,12 @@ public class UsuarioClient {
 		return desconectado;
 	}
 
-	public Downloader descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta) {
+	public Downloader descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, JProgressBar barra) {
 		//lanza el hilo de descarga para el archivo
 		Downloader d=null;
 		
 		if(_id!=-1)
-			d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas);
+			d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas, _interfaz);
 		
 		return d;
 	}

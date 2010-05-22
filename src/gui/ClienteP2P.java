@@ -52,12 +52,9 @@ public class ClienteP2P extends javax.swing.JFrame {
     private String _nombreBiblioteca;
     private boolean _conectado = false;
     private MenuContextual _menuContextual;
-    private DefaultTableModel _dm;
+    private DefaultTableModel _modeloTablaDescargas;
     private DefaultListModel _modeloListaRecursos = new DefaultListModel();
     private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
-    private DefaultTableModel _modeloTablaDescargas = new DefaultTableModel();
-    //private TableColumn columnaBarraProgreso;
-    //private TablaPorcentaje miTabla = new TablaPorcentaje();
     
     private UsuarioClient _cliente;
     
@@ -106,10 +103,10 @@ public class ClienteP2P extends javax.swing.JFrame {
 
 
         // Para especificar todo lo relativo a la tabla de las descargas
-        _dm = new DefaultTableModel(); // Instanciamos el modelo por defecto
+        _modeloTablaDescargas = new DefaultTableModel(); // Instanciamos el modelo por defecto
         // Asignamos la cabecera de la tabla
-        _dm.setColumnIdentifiers(new Object []{"Archivo", "Ruta al archivo", "Porcentaje Completado"});
-        _tablaDescargas.setModel(_dm); // Indicamos qué modelo va a utilizar la tabla        
+        _modeloTablaDescargas.setColumnIdentifiers(new Object []{"Archivo", "Ruta al archivo", "Porcentaje Completado"});
+        _tablaDescargas.setModel(_modeloTablaDescargas); // Indicamos qué modelo va a utilizar la tabla        
         // Hacemos que la tercera columna (la de )
         //_tablaDescargas.getColumn("Progress").setCellRenderer(new MiBarraProgreso());
         _tablaDescargas.getColumn("Porcentaje Completado").setCellRenderer(new MiBarraProgreso());
@@ -717,7 +714,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLoginActionPerformed
     	if(!_conectado) {
     		try {
-    			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto);
+    			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto,this);
     			_conectado = _cliente.conectar();
     			_cliente.anyadir(_easTmp);
     		}
@@ -1099,9 +1096,10 @@ public class ClienteP2P extends javax.swing.JFrame {
     	if(_conectado) {
     		String ruta=_rutaDescargas+a.nombre();
     		Downloader d;
-    	
-    		_dm.addRow(new Object[]{a.nombre(), ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
-    		d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta);
+
+    		JProgressBar barra = crearBarraDescarga(p, String.valueOf(p)+"%");
+    		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra});
+    		d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta, barra);
     		if(d!=null)
     			_descargasActuales.put(ruta, d);
     	}
@@ -1110,7 +1108,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     //Metodo para anyadir las descargas activas al iniciar la aplicación
 	public void nuevaDescarga(EstrArchivo e, int p) {
 		String ruta=_rutaDescargas+e.info.nombre;
-        _dm.addRow(new Object[]{e.info.nombre, ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
+        _modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
 	}
 
     /**
@@ -1206,15 +1204,14 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param archivo Archivo del que se ha obtenido una nueva parte
      * @param tamParte La longitud de la parte obtenida
      */
-    public void actualizarDescarga(String archivo, long tamParte) {
+    public void actualizarDescarga(String archivo, int porcentaje) {
         JProgressBar aux = null;
 
-        for(int i=0; i<_dm.getRowCount(); i++) {
-            if(archivo.equals(_dm.getValueAt(i, 0))) {
-                aux = (JProgressBar) _dm.getValueAt(i, 2);
-                int valor = aux.getValue() + (int)tamParte;
-                aux.setString(String.valueOf(valor) + "%");
-                aux.setValue(aux.getValue() + (int)tamParte);
+        for(int i=0; i<_modeloTablaDescargas.getRowCount(); i++) {
+            if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
+                aux = (JProgressBar) _modeloTablaDescargas.getValueAt(i, 2);
+                aux.setString(String.valueOf(porcentaje) + "%");
+                aux.setValue(porcentaje);
                 _tablaDescargas.repaint();
             }
         }
@@ -1286,5 +1283,22 @@ public class ClienteP2P extends javax.swing.JFrame {
 
 	public boolean conectado() {
 		return _conectado;
+	}
+
+	/**
+	 * Mueve la descarga finalizada a compartidos
+	 */
+	public void finalizarDescarga(String archivo, String ruta) {
+		boolean encontrado=false;
+		int i=0;
+		
+		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+            if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
+            else i++;
+        }
+		if(encontrado)
+			eliminarDescarga(i);
+		
+		_modeloListaRecursos.addElement(ruta);
 	}
 }

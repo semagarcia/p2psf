@@ -1,8 +1,12 @@
 package cliente;
 
+import gui.ClienteP2P;
+
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+
+import javax.swing.JProgressBar;
 
 import middleware.MiddlewareException;
 import coordinador.Archivo;
@@ -23,6 +27,8 @@ public class Downloader extends Thread {
 	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
 	private int _miId;
 	private float _porcentaje;
+	private ClienteP2P _interfaz;
+	private String _nombre;
 	
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
@@ -120,9 +126,10 @@ public class Downloader extends Thread {
 
 	
 	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
-	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas) {
+	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, ClienteP2P interfaz) {
 		super();
 		_arch=arch;
+		_nombre=_arch.nombre();
 		lanzados=new Semaforo(numConex);
 		escribir=new Semaforo(1);
 		esperar=new Semaforo(1);
@@ -136,6 +143,7 @@ public class Downloader extends Thread {
 		this.accederEas=accederEas;
 		_eas=eas;
 		_porcentaje=new Float(0);
+		_interfaz=interfaz;
 		
 		calcularDescargas(partes);
 	}
@@ -155,12 +163,11 @@ public class Downloader extends Thread {
 			}
 			
 			//Espera a que finalicen todos los hilos para mover la descarga a compartidos
-			for(int j=0;j<lanzados.getInicial();j++) {
+			for(int j=0;j<lanzados.getInicial();j++)
 				lanzados.bajar();
-				System.out.println("Bajado_"+j);
-			}
-			
-			System.out.println("MOVER DESCARGADO A COMPARTIDOS");
+
+			//Mueve la descarga a compartidos en la interfaz
+			_interfaz.finalizarDescarga(_nombre,this.ruta);
 		}
 		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
 			System.out.println("OBJECT_NOT_EXIST");
@@ -301,6 +308,6 @@ public class Downloader extends Thread {
 
 	public void addPorcentaje(float l) {
 		_porcentaje+=l;
-		System.out.println("PONER "+Math.round(_porcentaje)+"% EN LA BARRA");
+		_interfaz.actualizarDescarga(_nombre, Math.round(_porcentaje));
 	}
 }
