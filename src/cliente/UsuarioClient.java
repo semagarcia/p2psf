@@ -58,7 +58,7 @@ public class UsuarioClient {
 	public void anyadir(ArrayList<EstrArchivo> eas) {
 		ArrayList<EstrArchivo> aux=new ArrayList<EstrArchivo>();
 		
-		_accederEas.bajar("anyadir(UsuarioClient)");
+		_accederEas.bajar();
 		
 		for(int i=0;i<eas.size();i++) {
 			EstrArchivo e=eas.get(i);
@@ -74,13 +74,13 @@ public class UsuarioClient {
 			_coord.anyadirArchivos(enviar, _id);
 		}
 		
-		_accederEas.subir("anyadir(UsuarioClient)");
+		_accederEas.subir();
 	}
 	
 	
 	public void eliminar(EstrArchivo[] eas) {
 		
-		_accederEas.bajar("eliminar(UsuarioClient)");
+		_accederEas.bajar();
 		
 		for(int i=0;i<eas.length;i++) {
 			_eas.remove(eas[i].info.nombre);
@@ -89,7 +89,7 @@ public class UsuarioClient {
 		if(_id!=-1)
 			_coord.eliminarArchivos(eas, _id);
 		
-		_accederEas.subir("eliminar(UsuarioClient)");
+		_accederEas.subir();
 	}
 	
 	
@@ -103,11 +103,11 @@ public class UsuarioClient {
 			_hiloServer=new UsuarioServer(parametros, _eas, _accederEas);
 			_hiloServer.start();
 
-			_accederEas.bajar("conectar(UsuarioClient)");
+			_accederEas.bajar();
 			Collection<EstrArchivo> col=_eas.values();
 			EstrArchivo[] archivos=new EstrArchivo[col.size()];
 			col.toArray(archivos);
-			_accederEas.subir("conectar(UsuarioClient");
+			_accederEas.subir();
 			
 			try {
 				_id=_coord.conectar(archivos, _hiloServer.getRef());
@@ -140,11 +140,11 @@ public class UsuarioClient {
 		
 		if(!desconectado) {
 			
-			_accederEas.bajar("desconectar(UsuarioClient)");
+			_accederEas.bajar();
 			Collection<EstrArchivo> col=_eas.values();
 			EstrArchivo[] archivos=new EstrArchivo[col.size()];
 			col.toArray(archivos);
-			_accederEas.subir("desconectar(UsuarioClient)");
+			_accederEas.subir();
 			
 			_coord.desconectar(archivos,_id);
 			_hiloServer.stop();

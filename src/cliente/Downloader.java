@@ -9,14 +9,15 @@ import coordinador.Archivo;
 import coordinador.Coordinador;
 
 public class Downloader extends Thread {
+	public final String ruta;
+	public Semaforo lanzados;
+	public Semaforo escribir;
+	public Semaforo accederEas;
+
 	private Archivo _arch;
 	private long _tamPieza;
-	private final String _ruta;
 	private ArrayList<parteArchivo> _descargar;
 	private Coordinador _coord;
-	private Semaforo _lanzados;
-	private Semaforo _escribir;
-	private Semaforo _accederEas;
 	private Hashtable<String, EstrArchivo> _eas;
 	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
 	private int _miId;
@@ -107,7 +108,7 @@ public class Downloader extends Thread {
 		Peticion p=null;
 		
 		try {
-			p=new Peticion(_ruta,_coord.getUsuario(idUsuario), _arch.nombre(), _arch.tam(), _arch.checksum(), pieza, this,_lanzados, _escribir, usuarios, idUsuario, _miId, _accederEas, _eas, _arch);
+			p=new Peticion(_coord.getUsuario(idUsuario), pieza, this, usuarios, idUsuario, _miId, _eas, _arch);
 		}
 		catch (MiddlewareException e) {
 			e.printStackTrace();
@@ -121,16 +122,16 @@ public class Downloader extends Thread {
 	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas) {
 		super();
 		_arch=arch;
-		_lanzados=new Semaforo(numConex);
-		_escribir=new Semaforo(1);
+		lanzados=new Semaforo(numConex);
+		escribir=new Semaforo(1);
 		_tamPieza=tamPieza;
-		_ruta=ruta;
+		this.ruta=ruta;
 		_descargar=new ArrayList<parteArchivo>();
 		_coord=coord;
 		_miId=miId;
 		_seedsSolicitados=new Hashtable<Integer, Boolean>();
 		_peersSolicitados=new Hashtable<Integer, Boolean>();
-		_accederEas=accederEas;
+		this.accederEas=accederEas;
 		_eas=eas;
 		_porcentaje=new Float(0);
 		
@@ -167,7 +168,7 @@ public class Downloader extends Thread {
 		int usuario, i;
 		ArrayList<Peticion> hilos=new ArrayList<Peticion>();
 		
-		_escribir.bajar("lanzarPeticiones(Downloader)");
+		escribir.bajar();
 
 		//Crear hilos
 		
@@ -206,11 +207,11 @@ public class Downloader extends Thread {
 			}
 		}
 		
-		_escribir.subir("lanzarPeticiones(Downloader)");
+		escribir.subir();
 		
 		// Lanzar hilos
 		for(i=0;i<hilos.size();i++) {
-			_lanzados.bajar(("lanzarPeticiones(Downloader)"));
+			lanzados.bajar();
 			hilos.get(i).start();
 		}
 

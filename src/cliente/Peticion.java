@@ -11,14 +11,10 @@ import middleware.MiddlewareException;
 
 public class Peticion extends Thread {
 		
-	private String _ruta;
 	private Usuario _usuario;
 	private String _nombre;
 	private parteArchivo _pieza;
 	private Downloader _downloader;
-	private Semaforo _lanzados;
-	private Semaforo _escribir;
-	private Semaforo _accederEas;
 	private Hashtable<String, EstrArchivo> _eas;
 	private Hashtable<Integer, Boolean> _usuarios;
 	private int _miId;
@@ -32,7 +28,7 @@ public class Peticion extends Thread {
 	 * Escribe los bytes en el fichero destino comenzando por el byte inicio de dicho fichero 
 	 */
 	public void escribir(byte[] datos) {
-		File destino=new File(_ruta);
+		File destino=new File(_downloader.ruta);
 		RandomAccessFile fileOut;
 		try {
 			fileOut = new RandomAccessFile(destino,"rw");
@@ -46,22 +42,22 @@ public class Peticion extends Thread {
 	}
 
 	
-	public Peticion(String ruta, Usuario usu, String nombre, long tam, long checksum, parteArchivo pieza, Downloader downloader, Semaforo lanzados, Semaforo escribir, Hashtable<Integer, Boolean> usuarios, int idUsuario, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
-		_ruta=ruta;
-		_usuario=usu;
-		_nombre=nombre;
-		_tam=tam;
-		_checksum=checksum;
-		_pieza=pieza;
+	public Peticion(Usuario usu, parteArchivo pieza, Downloader downloader, Hashtable<Integer, Boolean> usuarios, int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
 		_downloader=downloader;
-		_lanzados=lanzados;
-		_escribir=escribir;
+		_usuario=usu;
+		_arch=arch;
+		_nombre=_arch.nombre();
+		_tam=_arch.tam();
+		_checksum=_arch.checksum();
+
+		
+		
+		_pieza=pieza;
 		_usuarios=usuarios;
 		_idUsuario=idUsuario;
 		_miId=miId;
-		_accederEas=accederEas;
 		_eas=eas;
-		_arch=arch;
+
 	}
 	
 	
@@ -71,39 +67,40 @@ public class Peticion extends Thread {
 try {
 		parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
 		
-		_escribir.bajar("run(Peticion)");
+		_downloader.escribir.bajar();
 		escribir(parte);
 		anyadirParte();
 		_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
 		_pieza.descargado=true;
 		_pieza.pedido=false;
 		_usuarios.put(_idUsuario, false);
-		_escribir.subir("run(Peticion)");
+		_downloader.escribir.subir();
 }
 catch(Exception e) {
 	System.out.println("\n\n\nEXCEPCION CAPTURADA\n\n\n");
+	e.printStackTrace();
 }
 
 		
-		_lanzados.subir("run(Peticion)");
+		_downloader.lanzados.subir();
 	}
 
 	
 	private void anyadirParte() {
 		int i=0, j;
 		
-		_accederEas.bajar("anyadirParte(Peticion)");
+		_downloader.accederEas.bajar();
 		
 		//Anyade el archivo a eas si no existía
 		if(_eas.get(_nombre)==null) {
-			infoArchivo info=new infoArchivo(_ruta, _nombre, _tam, _checksum);
+			infoArchivo info=new infoArchivo(_downloader.ruta, _nombre, _tam, _checksum);
 			EstrArchivo nuevo=new EstrArchivo(info, null);
 			_eas.put(info.nombre, nuevo);
 		}	
 		
 		
 		parteArchivo[] nuevo;
-		parteArchivo[] anterior=_eas.get(_nombre).partes;
+		parteArchivo[] anterior=_eas.get(_nombre).partes;				
 		if(anterior==null) {
 			// si no tenia parte, inserta la nueva directamente
 			nuevo=new parteArchivo[1];
@@ -119,10 +116,11 @@ catch(Exception e) {
 			// si tenia partes, las ordena y une partes contiguas
 			nuevo=new parteArchivo[anterior.length+1];
 			j=0;
+			boolean insertada=false;
 			for(i=0;i<nuevo.length;i++) {
 				nuevo[i]=new parteArchivo();
 				if(j<anterior.length) {
-					if(anterior[j].inicio<=_pieza.inicio) {
+					if(anterior[j].inicio<=_pieza.inicio || insertada) {
 						nuevo[i].inicio=anterior[j].inicio;
 						nuevo[i].fin=anterior[j].fin;
 						j++;
@@ -130,6 +128,7 @@ catch(Exception e) {
 					else {
 						nuevo[i].inicio=_pieza.inicio;
 						nuevo[i].fin=_pieza.fin;
+						insertada=true;
 					}
 				}
 				else {
@@ -140,30 +139,36 @@ catch(Exception e) {
 			
 			ArrayList<parteArchivo> resultado=new ArrayList<parteArchivo>();
 			parteArchivo aux;
-			
-			for(i=0;i<nuevo.length-1;i++) {
-				j=i+1;
+			i=0;
+			while(i<nuevo.length) {
+				aux=new parteArchivo();
+				aux.inicio=nuevo[i].inicio;
+				aux.fin=nuevo[i].fin;
+				aux.pedido=false;
+				aux.descargado=false;
 				boolean salir=false;
-				while(j<nuevo.length && !salir) {
-					if(nuevo[j].inicio<=nuevo[i].fin)
-						j++;
+				i++;
+				while(!salir && i<nuevo.length) {
+					if(aux.fin>=nuevo[i].inicio) {
+						aux.fin=nuevo[i].fin;
+						i++;
+					}
 					else
 						salir=true;
 				}
-				aux=new parteArchivo();
-				aux.inicio=nuevo[i].inicio;
-				aux.fin=nuevo[j-1].fin;
-				aux.pedido=false;
-				aux.descargado=false;
 				resultado.add(aux);
 			}
-			
-			resultado.toArray(_eas.get(_nombre).partes);
+
+			parteArchivo[] resFinal=new parteArchivo[resultado.size()];
+			for(i=0;i<resFinal.length;i++)
+				resFinal[i]=resultado.get(i);
+				
+			_eas.get(_nombre).partes=resFinal;
 		}
-		
+
 		_arch.actualizarPartes(_miId, _eas.get(_nombre).partes);
 		
-		_accederEas.subir("anyadirParte(Peticion)");
+		_downloader.accederEas.subir();
 	}
 
 
