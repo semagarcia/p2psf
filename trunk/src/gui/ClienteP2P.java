@@ -719,6 +719,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     		try {
     			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto);
     			_conectado = _cliente.conectar();
+    			_cliente.anyadir(_easTmp);
     		}
     		catch(Exception e) {
     			javax.swing.JOptionPane.showMessageDialog(this,
@@ -1145,7 +1146,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        _ipservidor="127.0.0.1";
 	        _iplocal="127.0.0.1";
 	        _puerto=2000;
-	        _rutaDescargas="./Descargas";
+	        _rutaDescargas="./Descargas/";
 	        javax.swing.JOptionPane.showMessageDialog(this,
 	        		"Debe establecer las opciones de configuración",
 	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);

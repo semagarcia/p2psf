@@ -102,7 +102,7 @@ public class ArchivoImpl extends ArchivoPOA {
 	}
 
 	@Override
-	public void actualizarPartes(int id, parteArchivo[] partes) {
+	public void actualizarPartes(int id, parteArchivo[] partes) {		
 		if(partes[0].inicio==0 && partes[0].fin==_tam) {
 			//El usuario se ha convertido en un seed de este fichero
 			eliminarPeer(id);

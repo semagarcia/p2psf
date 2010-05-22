@@ -10,7 +10,7 @@ public class Semaforo {
 	}
 
 	
-	public synchronized void bajar(String cadena) {
+	public synchronized void bajar() {
 		while(_contador==0) {
 			try {
 				wait();
@@ -23,7 +23,7 @@ public class Semaforo {
 	}
 	
 	
-	public synchronized void subir(String cadena) {
+	public synchronized void subir() {
 		if(_contador==0) {
 			notifyAll();
 			}

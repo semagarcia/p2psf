@@ -313,6 +313,8 @@ public class Opciones extends javax.swing.JDialog {
            _puerto = 0;
 
         _rutaDescargas = cajaRuta.getText();
+        if(!_rutaDescargas.endsWith("/"))
+        	_rutaDescargas=_rutaDescargas.concat("/");
         
         try {
 			_interfaz.establecerOpciones(_tam, _nConex, _ipservidor, _iplocal, _puerto, _rutaDescargas);
