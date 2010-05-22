@@ -42,16 +42,14 @@ public class Peticion extends Thread {
 	}
 
 	
-	public Peticion(Usuario usu, parteArchivo pieza, Downloader downloader, Hashtable<Integer, Boolean> usuarios, int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
+	public Peticion(Usuario usu, parteArchivo pieza, Downloader downloader, Hashtable<Integer, Boolean> usuarios,
+			int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
 		_downloader=downloader;
 		_usuario=usu;
 		_arch=arch;
 		_nombre=_arch.nombre();
 		_tam=_arch.tam();
 		_checksum=_arch.checksum();
-
-		
-		
 		_pieza=pieza;
 		_usuarios=usuarios;
 		_idUsuario=idUsuario;
@@ -64,24 +62,30 @@ public class Peticion extends Thread {
 	public void run() {
 		byte[] parte;
 		
-try {
-		parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
+		try {
+			parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);
+		}
+		catch(Exception e) {
+			parte=null;
+			System.out.println("\n\n\nEXCEPCION CAPTURADA\n\n\n");
+			e.printStackTrace();
+		}
 		
 		_downloader.escribir.bajar();
-		escribir(parte);
-		anyadirParte();
-		_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
-		_pieza.descargado=true;
-		_pieza.pedido=false;
-		_usuarios.put(_idUsuario, false);
-		_downloader.escribir.subir();
-}
-catch(Exception e) {
-	System.out.println("\n\n\nEXCEPCION CAPTURADA\n\n\n");
-	e.printStackTrace();
-}
-
 		
+		if(parte!=null) {
+			escribir(parte);
+			anyadirParte();
+			_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
+			_pieza.descargado=true;
+			_pieza.pedido=false;
+			_usuarios.put(_idUsuario, false);
+		}
+		
+		//Despierta al hilo Downloader si no lo está ya.
+		if(_downloader.esperar.getActual()==0)
+			_downloader.esperar.subir();
+		_downloader.escribir.subir();
 		_downloader.lanzados.subir();
 	}
 

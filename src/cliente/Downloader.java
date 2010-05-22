@@ -13,6 +13,7 @@ public class Downloader extends Thread {
 	public Semaforo lanzados;
 	public Semaforo escribir;
 	public Semaforo accederEas;
+	public Semaforo esperar;
 
 	private Archivo _arch;
 	private long _tamPieza;
@@ -124,6 +125,7 @@ public class Downloader extends Thread {
 		_arch=arch;
 		lanzados=new Semaforo(numConex);
 		escribir=new Semaforo(1);
+		esperar=new Semaforo(1);
 		_tamPieza=tamPieza;
 		this.ruta=ruta;
 		_descargar=new ArrayList<parteArchivo>();
@@ -146,9 +148,16 @@ public class Downloader extends Thread {
 			int i=0;
 		
 			while(pedir()) {
-				actualizarUsuarios();			
+				esperar.bajar();  //Evita una espera activa. Espera a que finalice el primer hilo peticion lanzado en la iteracion anterior.
+				actualizarUsuarios();		
 				lanzarPeticiones();
 				i++;
+			}
+			
+			//Espera a que finalicen todos los hilos para mover la descarga a compartidos
+			for(int j=0;j<lanzados.getInicial();j++) {
+				lanzados.bajar();
+				System.out.println("Bajado_"+j);
 			}
 			
 			System.out.println("MOVER DESCARGADO A COMPARTIDOS");

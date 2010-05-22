@@ -35,4 +35,9 @@ public class Semaforo {
 	public int getInicial() {
 		return _inicial;
 	}
+
+
+	public int getActual() {
+		return _contador;
+	}
 }
