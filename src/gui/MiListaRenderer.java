@@ -29,7 +29,6 @@ class MiListaRenderer implements ListCellRenderer {
 
         // Devolvemos ese JLabel modificado a nuestras necesidades
         return renderer;
-
   }
 
     /**

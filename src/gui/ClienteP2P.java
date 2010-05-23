@@ -1,8 +1,10 @@
 package gui;
 
+import java.awt.Cursor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,8 +15,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import javax.swing.DefaultListModel; 
@@ -33,12 +33,8 @@ import coordinador.Archivo;
 
 /**
  * Interfaz Gráfica Principal de la Aplicación P2PSF
- * @author sema
  */
 public class ClienteP2P extends javax.swing.JFrame {
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private Buscando _hiloBusqueda;
 	private Hashtable<Integer,Archivo> _tablaResBusqueda;
@@ -55,13 +51,10 @@ public class ClienteP2P extends javax.swing.JFrame {
     private DefaultTableModel _modeloTablaDescargas;
     private DefaultListModel _modeloListaRecursos = new DefaultListModel();
     private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
-    
     private UsuarioClient _cliente;
-    
     private ArrayList<EstrArchivo> _easTmp;
     
-    
-    /** Creates new form ClienteP2P */
+    /** Constructor del ClienteP2P */
     public ClienteP2P() {
     	_hiloBusqueda = null;
     	_tablaResBusqueda=new Hashtable<Integer,Archivo>();
@@ -101,7 +94,6 @@ public class ClienteP2P extends javax.swing.JFrame {
         Object [] headersResultados = {"Nombre Archivo", "Tamaño", "Nº Seeds", "Nº Peers", "Checksum"};
         _modeloTablaBusqueda.setColumnIdentifiers(headersResultados);
 
-
         // Para especificar todo lo relativo a la tabla de las descargas
         _modeloTablaDescargas = new DefaultTableModel(); // Instanciamos el modelo por defecto
         // Asignamos la cabecera de la tabla
@@ -117,20 +109,19 @@ public class ClienteP2P extends javax.swing.JFrame {
         
         // Implementación del menú contextual para la tabla de descargas
         _menuContextual = new MenuContextual(_tablaDescargas, _descargasActuales);
-        
-        
     }
     
+    /**
+     * Meétodo que limpia la tabla de los resultados de la búsqueda
+     */
 	public void limpiarResultadosBusqueda() {
         _tablaResBusqueda.clear();
         for(int i=0;i<_modeloTablaBusqueda.getRowCount();i++)
         	_modeloTablaBusqueda.removeRow(i);		
 	}
 
-    
-    // Código autogenerado
+    /** Otras inicializaciones */
     private void initComponents() {
-
         panelPpal = new javax.swing.JPanel();
         pestanyasApp = new javax.swing.JTabbedPane();
         pestaniaBiblioteca = new javax.swing.JPanel();
@@ -177,10 +168,31 @@ public class ClienteP2P extends javax.swing.JFrame {
         ayudaAyuda = new javax.swing.JMenuItem();
         ayudaAcercaDe = new javax.swing.JMenuItem();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        //setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Cliente de redes P2P");
         setMinimumSize(new java.awt.Dimension(400, 600));
         setResizable(false);
+        
+        addWindowListener(new java.awt.event.WindowListener() {
+			@Override
+			public void windowActivated(WindowEvent arg0) {}
+			@Override
+			public void windowClosed(WindowEvent arg0) {}
+			@Override
+			public void windowClosing(WindowEvent arg0) {
+				System.out.println(arg0.toString());
+				javax.swing.JOptionPane.showMessageDialog(rootPane, "Hey!");
+			}
+			@Override
+			public void windowDeactivated(WindowEvent arg0) {}
+			@Override
+			public void windowDeiconified(WindowEvent arg0) {}
+			@Override
+			public void windowIconified(WindowEvent arg0) {}
+			@Override
+			public void windowOpened(WindowEvent arg0) {}      	  
+        });
 
         panelPpal.setBorder(javax.swing.BorderFactory.createEtchedBorder(javax.swing.border.EtchedBorder.RAISED));
 
@@ -217,8 +229,17 @@ public class ClienteP2P extends javax.swing.JFrame {
         anyadirRecurso.setText("Añadir un nuevo recurso a \"Mi Biblioteca\"");
         anyadirRecurso.setToolTipText("Añade un nuevo fichero (o ficheros) del disco local a Mi Biblioteca");
         anyadirRecurso.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            // Función que se activa cuando se hace un click sobre el botón/label
+      	   public void mouseClicked(java.awt.event.MouseEvent evt) {
                 anyadirRecursoMouseClicked(evt);
+            }
+            // Función que se activa cuando se sitúa el cursor encima del botón/label
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+            // Función que se activa cuando se saca el cursor de encima del botón/label
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         });
 
@@ -226,8 +247,17 @@ public class ClienteP2P extends javax.swing.JFrame {
         quitarRecurso.setText("Quitar los recursos seleccionados");
         quitarRecurso.setToolTipText("Quita el o los recursos compartidos que se encuentren seleccionados en \"Mi Biblioteca\"");
         quitarRecurso.addMouseListener(new java.awt.event.MouseAdapter() {
+       	   // Función que se activa al pulsar sobre el botón/label
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 quitarRecursoMouseClicked(evt);
+            }
+            // Función que se activa cuando se sitúa el cursor encima del botón/label
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+            // Función que se activa cuando se saca el cursor de encima del botón/label
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         });
 
@@ -235,8 +265,17 @@ public class ClienteP2P extends javax.swing.JFrame {
         actualizarBiblioteca.setText("Actualizar \"Mi Biblioteca\" en la red P2PSF");
         actualizarBiblioteca.setToolTipText("Hace efectivos los cambios realizados en \"Mi Biblioteca\" para la red P2P");
         actualizarBiblioteca.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+            // Función que se activa al pulsar sobre el botón/label
+      	   public void mouseClicked(java.awt.event.MouseEvent evt) {
                 actualizarBibliotecaMouseClicked(evt);
+            }
+      	   // Función que se activa cuando se sitúa el cursor encima del botón/label
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.HAND_CURSOR));
+            }
+            // Función que se activa cuando se saca el cursor de encima del botón/label
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+            	setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
             }
         });
 
@@ -666,6 +705,8 @@ public class ClienteP2P extends javax.swing.JFrame {
                 .addContainerGap())
         );
         
+        
+        
         // Captura un doble click sobre la lista de resultados de la búsqueda
         _tablaResultados.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e){
@@ -687,11 +728,14 @@ public class ClienteP2P extends javax.swing.JFrame {
                     _tablaResultados.setRowSelectionInterval(fila, fila);
             }
         });
-                
-        
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
 
+        pack();
+    }
+
+    /**
+     * Método que añade una nueva descarga
+     * @param archivo Estructura Archivo que se debe añadir como nueva descarga
+     */
     private void anyadirDescarga(Archivo archivo) {
     	if(_conectado) {
     		parteArchivo[] partes=new parteArchivo[1];
@@ -700,18 +744,21 @@ public class ClienteP2P extends javax.swing.JFrame {
     		}
 	}
 
+    /**
+     * Capturador del evento de la tecla enter sobre el campo de búsqueda de archivos
+     * @param evt
+     */
 	private void cajaTextoNomFichKeyReleased(KeyEvent evt) {
     	if(evt.getKeyCode()==KeyEvent.VK_ENTER)
     		botonBuscarActionPerformed(null);
 	}
-    
 
 	/**
      * Esta función será la encargada de enviar al coordinador la lista de archivos
      * que posee el usuario localmente y recibe el identificador que éste le envía
      * @param evt
      */
-    public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLoginActionPerformed
+    public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {
     	if(!_conectado) {
     		try {
     			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto,this);
@@ -732,26 +779,26 @@ public class ClienteP2P extends javax.swing.JFrame {
     			botonBuscar.setEnabled(true);
         	
     			//Deshabilitar acciones descargas
-    			_menuContextual.conectar();
+    			_menuContextual.reanudar();
     			cambiarEstado("");
     		}
     	}
-    }//GEN-LAST:event_opcionArchivoLoginActionPerformed
+    }
 
     /**
      * Cuando se pulse sobre el icono de conectar se llamará a su correspondiente
      * función (opcionArchivoLoginActionPerformed), el manejador del evento.
      * @param evt
      */
-    private void iconConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_iconConectarActionPerformed
+    private void iconConectarActionPerformed(java.awt.event.ActionEvent evt) {
         opcionArchivoLoginActionPerformed(evt);
-    }//GEN-LAST:event_iconConectarActionPerformed
+    }
 
     /**
      * Cuando se quiera desconectar el usuario, debe comunicarselo al coordinador
      * @param evt
      */
-    public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoLogoutActionPerformed
+    public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {
     	if(_conectado) {
     		_conectado = !_cliente.desconectar();
     		_cliente=null;
@@ -763,13 +810,13 @@ public class ClienteP2P extends javax.swing.JFrame {
     			botonBuscar.setEnabled(false);
         	
     			//Deshabilitar acciones descargas
-    			_menuContextual.desconectar();
+    			_menuContextual.pausar();
         	
     			limpiarResultadosBusqueda();
     		}
     		else cambiarEstado("Error al desconectar.");
     	}
-    }//GEN-LAST:event_opcionArchivoLogoutActionPerformed
+    }
 
 
 	/**
@@ -777,95 +824,99 @@ public class ClienteP2P extends javax.swing.JFrame {
      * función (opcionArchivoLogoutActionPerformed), el manejador del evento.
      * @param evt
      */
-    private void iconDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_iconDesconectarActionPerformed
+    private void iconDesconectarActionPerformed(java.awt.event.ActionEvent evt) {
         this.opcionArchivoLogoutActionPerformed(evt);
-    }//GEN-LAST:event_iconDesconectarActionPerformed
+    }
 
     /**
      * Muestra la pestaña correspondiente a "Mi Biblioteca"
      * @param evt
      */
-    private void opcionP2PBibliotecaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionP2PBibliotecaActionPerformed
+    private void opcionP2PBibliotecaActionPerformed(java.awt.event.ActionEvent evt) {
         pestanyasApp.setSelectedIndex(0);
-    }//GEN-LAST:event_opcionP2PBibliotecaActionPerformed
+    }
 
     /**
      * Muestra la pestaña correspondiente a "Busquedas"
      * @param evt
      */
-    private void opcionP2PBusquedaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionP2PBusquedaActionPerformed
+    private void opcionP2PBusquedaActionPerformed(java.awt.event.ActionEvent evt) {
         pestanyasApp.setSelectedIndex(1);
-    }//GEN-LAST:event_opcionP2PBusquedaActionPerformed
+    }
 
     /**
      * Muestra la pestaña correspondiente a Descargas
      * @param evt
      */
-    private void opcionP2PDescargasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionP2PDescargasActionPerformed
+    private void opcionP2PDescargasActionPerformed(java.awt.event.ActionEvent evt) {
         pestanyasApp.setSelectedIndex(2);
-    }//GEN-LAST:event_opcionP2PDescargasActionPerformed
+    }
 
     /**
      * Método que eliminar todos los resultados de la búsqueda de un archivo
      * @param evt
      */
-    public void opcionP2PLimpiarResultadosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionP2PLimpiarResultadosActionPerformed
+    public void opcionP2PLimpiarResultadosActionPerformed(java.awt.event.ActionEvent evt) {
         for (int i=_modeloTablaBusqueda.getRowCount()-1; i>=0; i--)
             _modeloTablaBusqueda.removeRow(i);
-    }//GEN-LAST:event_opcionP2PLimpiarResultadosActionPerformed
+    }
 
-    private void opcionP2PLimpiarDescargasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionP2PLimpiarDescargasActionPerformed
-    }//GEN-LAST:event_opcionP2PLimpiarDescargasActionPerformed
+    /**
+     * Método que limpia las descargas completadas
+     * @param evt
+     */
+    private void opcionP2PLimpiarDescargasActionPerformed(java.awt.event.ActionEvent evt) {
+    }
 
     /**
      * Muestra la ventana típica de ayuda
      * @param evt
      */
-    private void ayudaAyudaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ayudaAyudaActionPerformed
+    private void ayudaAyudaActionPerformed(java.awt.event.ActionEvent evt) {
         // Cuando se pulse sobre la ayuda se abre dicha ventana
         Ayuda a = new Ayuda(this, true); // La instanciamos. Será modal
         a.setVisible(true); // Y la mostramos
-    }//GEN-LAST:event_ayudaAyudaActionPerformed
+    }
 
     /**
      * Muestra los créditos del programa. Información acerca del mismo.
      * @param evt
      */
-    private void ayudaAcercaDeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ayudaAcercaDeActionPerformed
+    private void ayudaAcercaDeActionPerformed(java.awt.event.ActionEvent evt) {
         // Cuando se pulse sobre la ayuda se abre dicha ventana
         AcercaDe ad = new AcercaDe(this, true); // La instanciamos. Será modal
         ad.setVisible(true); // Y la mostramos
-    }//GEN-LAST:event_ayudaAcercaDeActionPerformed
+    }
 
     /**
      * Método que llama a la función encargada de mostrar la ayuda
      * @param evt
      */
-    private void iconAyudaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_iconAyudaActionPerformed
+    private void iconAyudaActionPerformed(java.awt.event.ActionEvent evt) {
         this.ayudaAyudaActionPerformed(evt);
-    }//GEN-LAST:event_iconAyudaActionPerformed
+    }
 
     /**
      * Método que llama la función encargada de mostrar el "acerca de"
      * @param evt
      */
-    private void iconSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_iconSalirActionPerformed
+    private void iconSalirActionPerformed(java.awt.event.ActionEvent evt) {
         // Si ha pulsado sobre el icono de salir se llama a la función correspondiente
         this.opcionArchivoSalirActionPerformed(evt);
-    }//GEN-LAST:event_iconSalirActionPerformed
+    }
 
     /**
      * Método encargado de cerrar la aplicación. Para ello, antes lo notifica
      * al coordinador y luego cierra la aplicación.
      * @param evt
      */
-    private void opcionArchivoSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoSalirActionPerformed
+    private void opcionArchivoSalirActionPerformed(java.awt.event.ActionEvent evt) {
         // 1 - Decirle al coordinador que nos vamos
         opcionArchivoLogoutActionPerformed(evt);
 
         // 2 - Cerrar la aplicación
         System.exit(0);
-    }//GEN-LAST:event_opcionArchivoSalirActionPerformed
+    }
 
     /**
      * Cuando se pulse sobre el botón "Búscalo" se instancia el hilo encargado
@@ -873,7 +924,7 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param evt
      */
     @SuppressWarnings("deprecation")
-	private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonBuscarActionPerformed
+	private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {
     	if(_conectado) {
     		if(_hiloBusqueda!=null)
     			_hiloBusqueda.stop();            	
@@ -883,7 +934,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     		_hiloBusqueda.setNombre(cajaTextoNomFich.getText());
     		_hiloBusqueda.start(); // Lanza el hilo
     	}
-    }//GEN-LAST:event_botonBuscarActionPerformed
+    }
 
     /**
      * Método encargado de abrir una ventana (JFileChooser) para escoger los
@@ -891,7 +942,7 @@ public class ClienteP2P extends javax.swing.JFrame {
      * compartidos por el usuario
      * @param evt
      */
-    private void anyadirRecursoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_anyadirRecursoMouseClicked
+    private void anyadirRecursoMouseClicked(java.awt.event.MouseEvent evt) {
         // Cuando se pulse en el botón Añadir Recurso
         int opc = 0;
         File [] ficheros;
@@ -924,19 +975,20 @@ public class ClienteP2P extends javax.swing.JFrame {
                 _modeloListaRecursos.addElement(ficheros[i].getPath());
             }
         }
-    }//GEN-LAST:event_anyadirRecursoMouseClicked
+    }
 
-    
     /**
      * Función que obtiene la informacion de un fichero
      * @param file
      * @return
      */
     private infoArchivo getInfoArchivo(File file) {
-    	infoArchivo aux=new infoArchivo();
+   	 // Indicamos un mensajito informativo
+   	 cambiarEstado("Calculando la suma de verificacion...");
+   	 infoArchivo aux = new infoArchivo();
         CheckedInputStream suma = null;
 
-        try {
+        try { // Se lee el fichero y se va creando el checksum
         	FileInputStream f = new FileInputStream(file);
             suma = new CheckedInputStream(f, new CRC32());
             BufferedInputStream in = new BufferedInputStream(suma);
@@ -945,24 +997,26 @@ public class ClienteP2P extends javax.swing.JFrame {
             in.close(); // Cerramos el fichero
         }
         catch (IOException ex) {
-        	Logger.getLogger(ClienteP2P.class.getName()).log(Level.SEVERE, null, ex);
+      	  javax.swing.JOptionPane.showMessageDialog(this, 
+      			  "¡Error al calcular el checksum de \""+file.getName()+"\"!");
         }
 
+        // Asignamos la información del archivo
         aux.nombre=file.getName();
         aux.ruta=file.getPath();
         aux.checksum=suma.getChecksum().getValue();
         aux.tam=file.length();    	
-    	
+        cambiarEstado(""); // Volvemos al estado original
+        
 		return aux;
 	}
-        
 
 	/**
      * Cuando se pulse sobre el botón eliminar se evalúa si hay recursos seleccionados,
      * y en caso de existir, se eliminan. Si no, se muestra un aviso
      * @param evt
      */
-    private void quitarRecursoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_quitarRecursoMouseClicked
+    private void quitarRecursoMouseClicked(java.awt.event.MouseEvent evt) {
         // Obtenemos el indice que ocupan los elementos que se han seleccionado
         int [] indices = _listaFicherosCompartidos.getSelectedIndices();
         String fichero; 
@@ -977,24 +1031,23 @@ public class ClienteP2P extends javax.swing.JFrame {
         for (int i=indices.length - 1; i>=0; i--) {
             fichero=(String) _modeloListaRecursos.getElementAt(indices[i]);
             nombre=fichero.substring(fichero.lastIndexOf("/")+1,fichero.length());
-    		int j=0;
-    		while(j<_easTmp.size()) {
-    			if(_easTmp.get(j).info.nombre.equals(nombre)) {
-    				_easTmp.remove(j);
-    				j=_easTmp.size();
-    			}
-    			else j++;
-    		}
+            int j=0;
+            while(j<_easTmp.size()) {
+            	if(_easTmp.get(j).info.nombre.equals(nombre)) {
+            		_easTmp.remove(j);
+            		j=_easTmp.size();
+            	} else j++;
+            }
             _modeloListaRecursos.removeElementAt(indices[i]);
         }
-    }//GEN-LAST:event_quitarRecursoMouseClicked
+    }
 
     /**
      * Cuando se pulse sobre el botón de actualizar la bibioteca se examinan los
      * archivos que hay en la lista y se genera un XML con dicha información
      * @param evt
      */
-    private void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_actualizarBibliotecaMouseClicked
+    void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {
         Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
         String resultado="";
         
@@ -1011,17 +1064,18 @@ public class ClienteP2P extends javax.swing.JFrame {
         if(_conectado)
         	_cliente.anyadir(_easTmp);
         
+        // Mostramos el mensaje mediante una ventanita
         javax.swing.JOptionPane.showMessageDialog(this,resultado);
-    }//GEN-LAST:event_actualizarBibliotecaMouseClicked
+    }
 
     /**
      * Método que muestra la ventana de configuración de la aplicación
      * @param evt
      */
-    private void opcionArchivoOpcionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_opcionArchivoOpcionesActionPerformed
+    private void opcionArchivoOpcionesActionPerformed(java.awt.event.ActionEvent evt) {
         Opciones opciones = new Opciones(this, _ipservidor, _iplocal, _puerto, _tamBloque, _conexionesMaximas, _rutaDescargas, this);
         opciones.setVisible(true);
-    }//GEN-LAST:event_opcionArchivoOpcionesActionPerformed
+    }
 
     /**
      * Método que muestra un mensaje en la barra de estado. Si se llama con la
@@ -1048,23 +1102,29 @@ public class ClienteP2P extends javax.swing.JFrame {
         	try {
 				parser.parsearArchivoXML();
 			} catch (IOException e) {
+				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion IOException");
 				e.printStackTrace();
 			} catch (ParserConfigurationException e) {
+				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion ParserConfigurationException");
 				e.printStackTrace();
 			} catch (SAXException e) {
-				e.printStackTrace();
+				// Cuando el XML esté mal formado, se borra y se sale de la aplicación
+				javax.swing.JOptionPane.showMessageDialog(this, 
+						"¡Error grave! El fichero biblioteca está mal formado. Reinicie la aplicación.");	
+				File xmlBiblio = new File(_nombreBiblioteca);
+				// Si no se ha borrado correctamente el XML, se le pide que al usuario que lo haga él
+				if(!xmlBiblio.delete())
+					javax.swing.JOptionPane.showMessageDialog(this, 
+							"Por favor, borre manualmente el archivo \"" + _nombreBiblioteca + "\"");	
+				System.exit(0); // Salimos de la aplicación
 			}
-
         
-        // Despues lo parseamos el arbol XML para extraer la informacion
-        // Aki debemos capturar las excepciones, y si se lanza la expcecion SAXParseException
-        // es debido a un XML mal formado. Opciones adicionales:
-        _easTmp=parser.parsearDocumento(_modeloListaRecursos, this);
+        // Despues parseamos el arbol XML para extraer la informacion y meterla en el ArrayList
+			_easTmp = parser.parsearDocumento(_modeloListaRecursos, this);
         
-        if(_conectado)
+        if(_conectado) // Y si está conectado, lo añadimos
         	_cliente.anyadir(_easTmp);
     }
-
     
     /**
      * Método que añade una nueva fila a la tabla de búsqueda
@@ -1075,7 +1135,8 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param p Número de peers del fichero encontrado
      */
     public void nuevoResultado(String n, long t, long c, int s, int p) {
-        _modeloTablaBusqueda.addRow(new Object[]{n, t, c, s, p});
+   	 // El orden correcto es: nombre, tamaño, seeds, peers, checksum
+        _modeloTablaBusqueda.addRow(new Object[]{n, t, s, p, c});
     }
 
     /**
@@ -1100,15 +1161,18 @@ public class ClienteP2P extends javax.swing.JFrame {
     		JProgressBar barra = crearBarraDescarga(p, String.valueOf(p)+"%");
     		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra});
     		d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta, barra);
-    		if(d!=null)
+    		if(d!=null) {
     			_descargasActuales.put(ruta, d);
+    			_menuContextual.nuevoEstado(ruta);
+    			System.out.println("Agrandando el vector");    		
+    		}
     	}
     }
     
     //Metodo para anyadir las descargas activas al iniciar la aplicación
 	public void nuevaDescarga(EstrArchivo e, int p) {
 		String ruta=_rutaDescargas+e.info.nombre;
-        _modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
+      _modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
 	}
 
     /**
@@ -1119,7 +1183,11 @@ public class ClienteP2P extends javax.swing.JFrame {
         _modeloTablaDescargas.removeRow(fila);
     }
 
-    
+    /**
+     * Método que busca el archivo de configuración (opciones.txt), lo carga y lo lee.
+     * Si no existe, crea un nuevo con unos valores por defecto
+     * @throws IOException
+     */
     private void cargarOpciones() throws IOException {
         Scanner entrada;
         
@@ -1135,8 +1203,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        if(!f.isDirectory()) f.mkdir();
 	        
 	        entrada.close();
-		}
-        catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
         	//Si no encuentra el fichero de configuración muestra el diálogo para introducir
         	//las opciones con unos parámetros por defecto.
 	        _tamBloque=1048576;
@@ -1150,7 +1217,6 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
         	opcionArchivoOpcionesActionPerformed(null);
 		}
-        
 	}
     
     /**
@@ -1216,9 +1282,31 @@ public class ClienteP2P extends javax.swing.JFrame {
             }
         }
     }
+    
+    /**
+     * Método que devuelve el valor del atributo "conectado"
+     * @return true si está conectado a la red P2P y false en caso contrario
+     */
+    public boolean conectado() {
+ 		return _conectado;
+ 	 }
 
-
-
+ 	/**
+ 	 * Mueve la descarga finalizada a compartidos
+ 	 */
+ 	public void finalizarDescarga(String archivo, String ruta) {
+ 		boolean encontrado=false;
+ 		int i=0;
+ 		
+ 		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+             if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
+             else i++;
+         }
+ 		if(encontrado)
+ 			eliminarDescarga(i);
+ 		
+ 		_modeloListaRecursos.addElement(ruta);
+ 	}
 
     /**
      * @param args the command line arguments
@@ -1230,9 +1318,8 @@ public class ClienteP2P extends javax.swing.JFrame {
             }
         });
     }
-
     
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration
     private javax.swing.JList _listaFicherosCompartidos;
     private javax.swing.JLabel _loaderBuscando;
     private javax.swing.JTable _tablaDescargas;
@@ -1279,26 +1366,4 @@ public class ClienteP2P extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator separadorArchivo;
     private javax.swing.JLabel valorEstadoActual;
     // End of variables declaration//GEN-END:variables
-
-
-	public boolean conectado() {
-		return _conectado;
-	}
-
-	/**
-	 * Mueve la descarga finalizada a compartidos
-	 */
-	public void finalizarDescarga(String archivo, String ruta) {
-		boolean encontrado=false;
-		int i=0;
-		
-		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
-            if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
-            else i++;
-        }
-		if(encontrado)
-			eliminarDescarga(i);
-		
-		_modeloListaRecursos.addElement(ruta);
-	}
 }
