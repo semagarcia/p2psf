@@ -1,3 +1,0 @@
-#!/bin/bash
-
-java cliente.Main -ORBInitialPort 2000

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# -ORBInitialPort <Puerto> -ORBInitialHost <IP servidor de nombres> -ORBServerHost <IP local>
+java  coordinador.CoordinadorServer -ORBInitialPort 2000 -ORBServerHost 127.0.0.1

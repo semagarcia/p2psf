@@ -30,15 +30,14 @@ public class MenuContextual extends JFrame {
 	 //private ArrayList<Boolean> _estadoDescargas;
 	 protected int _filaSeleccionada;
 	 
-	 int i = 0;
   
     public MenuContextual(JTable tabla, Hashtable<String, Downloader> descargasActuales) {
-   	 _miTabla = tabla; // Referencia a la tabla descargas
+   	 	_miTabla = tabla; // Referencia a la tabla descargas
    	 
-   	 // Creamos un Hastable para mantener las descargas que están iniciadas o pausadas
-   	 //estadoDescargas = new Hashtable<int, boolean>();
+   	 	// Creamos un Hastable para mantener las descargas que están iniciadas o pausadas
+   	 	_estadoDescargas = new Hashtable<String, Boolean>();
    	 
-   	 // Añadimos el listener a la tabla
+   	 	// Añadimos el listener a la tabla
 	    _listenerPopup = new ListenerPopup();
 	    _miTabla.addMouseListener(_listenerPopup);
    	 
@@ -47,29 +46,26 @@ public class MenuContextual extends JFrame {
    	 
 	    // Primera opcion: iniciar una descarga
 	    _iniciar = new JMenuItem(_iniciarDescarga);
-   	 //_iniciar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/iniciar.png")));
-   	 _iniciar.addActionListener(new ManejadorEventosMenu(this));
-   	 //_iniciar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/iniciar.png")));
+   	 	_iniciar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/iniciar.png")));
    	 	_iniciar.addActionListener(new ManejadorEventosMenu(this));
 	    _menuPopup.add(_iniciar);
 
 	    // Segunda opcion: pausar una descarga
 	    _pausar = new JMenuItem(_pausarDescarga);
-	    //_pausar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/pausar.png")));
+	    _pausar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/pausar.png")));
 	    _pausar.addActionListener(new ManejadorEventosMenu(this));
 	    _menuPopup.add(_pausar);
 	    
 	    // Tercera opcion: cancelar una descarga
 	    _cancelar = new JMenuItem(_cancelarDescarga);
-	    //_cancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/cancelar.png")));
+	    _cancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/cancelar.png")));
 	    _cancelar.addActionListener(new ManejadorEventosMenu(this));
 	    _menuPopup.add(_cancelar);	    
 	    
 	    // Para añadir un listener específico a la cabecera	    
 	    //_miTabla.getTableHeader().addMouseListener(_listenerPopup);
 	    
-	    pausar();
-	    
+	    parar();
 	    _descargasActuales=descargasActuales;
 	    
 	    _estadoDescargas = new Hashtable<String, Boolean>();
@@ -105,9 +101,9 @@ public class MenuContextual extends JFrame {
    		 if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
    			 _filaSeleccionada=_miTabla.rowAtPoint(e.getPoint());
    			 if(_estadoDescargas.get(_miTabla.getValueAt(_filaSeleccionada, 1))) { // Si es true
-   				reanudar(); 
+   				iniciar(); 
    			 } else {
-   				pausar();   				 
+   				parar();   				 
    			 }
    			 _menuPopup.show(e.getComponent(), e.getX(), e.getY());
    		 // Si se ha pulsado con el botón izquierdo del ratón
@@ -123,21 +119,20 @@ public class MenuContextual extends JFrame {
      * @param e
      */
     void realizarAccion(ActionEvent e) {   
-   	 System.out.println("La i: " + i);
-   	 i++;
    	 
    	 // Se consulta si la descarga i-ésima está descargando o pausando, para mostrar el menu en función de ello   	 
    	 if(e.getActionCommand().equals(_iniciarDescarga)) {
    		 _iniciar.setEnabled(false); // Al pulsar sobre iniciar se deshabilita
    		 _pausar.setEnabled(true); // Y se habilita pausar para poder pausarla
-   		 //pausar();
-   		 //_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).start();
+   		 iniciar();
+   		 _descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).start();
    		 System.out.println("Descargazz iniciada");
    	 } else if(e.getActionCommand().equals(_pausarDescarga)) {
    		 _iniciar.setEnabled(true); // Al pulsar sobre pausar se deshabilita
    		 _pausar.setEnabled(false); // Y se habilita iniciar para poder continuar
-   		 //reanudar();
-   		 //_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).suspend();
+   		 parar();
+   		 System.out.println("IMPLEMENTAR");
+   		 //_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).parar();
    		 System.out.println("Descargazz pausada...");
    	 } else if(e.getActionCommand().equals(_cancelarDescarga)) {
    		 System.out.println("Uy, seguro que quieres cancelarla?");
@@ -147,17 +142,14 @@ public class MenuContextual extends JFrame {
     /**
      * 
      */
-	public void reanudar() {
-   	 	_iniciar.setEnabled(false);
-	    _pausar.setEnabled(true);
-	}
-
-    /**
-     * 
-     */
-	public void pausar() {
+	public void parar() {
    	 	_iniciar.setEnabled(true);
 	    _pausar.setEnabled(false);
+	}
+	
+	public void iniciar() {
+   	 	_iniciar.setEnabled(false);
+	    _pausar.setEnabled(true);
 	}
 } // Final de la clase MenuContextual
 

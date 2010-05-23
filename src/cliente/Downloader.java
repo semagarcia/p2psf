@@ -167,7 +167,8 @@ public class Downloader extends Thread {
 				lanzados.bajar();
 
 			//Mueve la descarga a compartidos en la interfaz
-			_interfaz.finalizarDescarga(_nombre,this.ruta);
+			_interfaz.finalizarDescarga(_nombre,ruta);
+
 		}
 		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
 			System.out.println("OBJECT_NOT_EXIST");

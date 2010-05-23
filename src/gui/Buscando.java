@@ -29,8 +29,8 @@ public class Buscando extends Thread {
      */
     Buscando(ClienteP2P aplicacionPpal, JLabel loaderBuscando, UsuarioClient cliente, Hashtable<Integer,Archivo> tablaResBusqueda) {
         super();
-        this._interfaz = aplicacionPpal;
-        this._barraProgreso = loaderBuscando;
+        _interfaz = aplicacionPpal;
+        _barraProgreso = loaderBuscando;
         _cliente=cliente;
         _tablaResBusqueda=tablaResBusqueda;
     }
