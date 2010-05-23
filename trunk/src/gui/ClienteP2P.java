@@ -779,7 +779,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     			botonBuscar.setEnabled(true);
         	
     			//Deshabilitar acciones descargas
-    			_menuContextual.reanudar();
+    			_menuContextual.parar();
     			cambiarEstado("");
     		}
     	}
@@ -810,7 +810,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     			botonBuscar.setEnabled(false);
         	
     			//Deshabilitar acciones descargas
-    			_menuContextual.pausar();
+    			_menuContextual.parar();
         	
     			limpiarResultadosBusqueda();
     		}
@@ -1180,7 +1180,7 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param fila Numero de fila a eliminar
      */
     public void eliminarDescarga(int fila) {
-        _modeloTablaDescargas.removeRow(fila);
+        	_modeloTablaDescargas.removeRow(fila);
     }
 
     /**
@@ -1294,9 +1294,19 @@ public class ClienteP2P extends javax.swing.JFrame {
  	/**
  	 * Mueve la descarga finalizada a compartidos
  	 */
- 	public void finalizarDescarga(String archivo, String ruta) {
+ 	public synchronized void finalizarDescarga(String archivo, String ruta) {
  		boolean encontrado=false;
  		int i=0;
+ 		
+// 		System.out.println("antes");
+// 		try {
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		System.out.println("despues");
+ 		
+ 		_descargasActuales.remove(ruta);
  		
  		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
              if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
@@ -1305,7 +1315,7 @@ public class ClienteP2P extends javax.swing.JFrame {
  		if(encontrado)
  			eliminarDescarga(i);
  		
- 		_modeloListaRecursos.addElement(ruta);
+ 		_modeloListaRecursos.addElement(ruta); 		
  	}
 
     /**
