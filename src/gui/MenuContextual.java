@@ -87,36 +87,19 @@ public class MenuContextual extends JFrame {
 
     /**
      * Clase interna que bla, bla, bla...
-     * @author sema
      */
     class ListenerPopup extends MouseAdapter {
-   	 /*public void mousePressed(MouseEvent e) { 
+   	 public void mousePressed(MouseEvent e) { 
    		 System.out.println("Estoy entrando en el ListenerPopup");
    		 //e.getButton()	 
    		 mostrarMenuPopup(e);
-   	 }*/
+   	 }
    	 
    	 /*public void mouseReleased(MouseEvent e) {
    		 System.out.println("Se ha releseado el boton");
    	 }*/
-   	 
-   	 public void mouseClick(MouseEvent e) {
-   		// Si se ha pulsado con el botón derecho del ratón sobre la tabla
-   		 if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
-   			 _filaSeleccionada=_miTabla.rowAtPoint(e.getPoint());
-   			 if(_estadoDescargas.get(_miTabla.getValueAt(_filaSeleccionada, 1))) // Si es true
-   				reanudar(); 
-   			 else
-   				pausar();   				 
-   			 _menuPopup.show(e.getComponent(), e.getX(), e.getY());
-   		 // Si se ha pulsado con el botón izquierdo del ratón
-   		 } else if(e.getButton() == java.awt.event.MouseEvent.BUTTON1) {
-             _filaSeleccionada= _miTabla.rowAtPoint(e.getPoint());
-             _miTabla.setRowSelectionInterval(_filaSeleccionada, _filaSeleccionada);
-   		 }
-   	 }
 
-   	/* private void mostrarMenuPopup(MouseEvent e) {
+   	 private void mostrarMenuPopup(MouseEvent e) {
    		 System.out.println("Entrando en la función mostrarMenuPopup");
    		 // Si se ha pulsado con el botón derecho del ratón sobre la tabla
    		 if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
@@ -132,7 +115,7 @@ public class MenuContextual extends JFrame {
              _filaSeleccionada= _miTabla.rowAtPoint(e.getPoint());
              _miTabla.setRowSelectionInterval(_filaSeleccionada, _filaSeleccionada);
    		 }
-   	 }*/
+   	 }
     } // Fin de la clase ListenerPopup
 
     /**
@@ -180,7 +163,6 @@ public class MenuContextual extends JFrame {
 
 /**
  * Clase que bla, bla... 
- * @author sema
  */
 class ManejadorEventosMenu implements ActionListener {
     MenuContextual adaptador;
