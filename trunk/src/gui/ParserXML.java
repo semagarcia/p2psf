@@ -20,17 +20,13 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-
-
 /**
  * Clase encargada del parseo y extracción de información desde el fichero
  * XML especificado
  * @author sema
  */
 public class ParserXML {
-
     private Document DOM;
-    //private List listadoDescargas = new ArrayList();
     private EstrArchivo[] eas;
     private String nombreFichero;
 
@@ -44,15 +40,13 @@ public class ParserXML {
     private static final String ETIQUETA_PEERS = "peers";
     private static final String ETIQUETA_PARTE = "parte";
 
-
     /**
      * Constructor parametrizado. Recibe el nombre del XML a parsear
-     * @param nomFich
+     * @param nomFich nombre del fichero xml (la biblioteca)
      */
     ParserXML(String nomFich) {
-        nombreFichero = nomFich; // Obtenemos el nombre del fichero xml (la biblioteca)
+        nombreFichero = nomFich; 
     }
-
 
     /**
      * Esta función se encarga de generar un documento o arbol XML en memoria a
@@ -74,20 +68,22 @@ public class ParserXML {
             DOM = db.parse(nombreFichero); // Parseamos el archivo XML
         }
         catch (IOException ioe) {
-        	Biblioteca b=new Biblioteca();
-        	b.guardarXML();
+      	// Si no existe el archivo de la biblioteca (denotado por la excepcion), se crea
+        	Biblioteca b = new Biblioteca(); // Instanciamos un objeto biblioteca
+        	b.guardarXML(); // Y creamos la estructura básica
         	DOM = db.parse(nombreFichero); // Parseamos el archivo XML
         }
     }
-
     
     /**
      * Esta función parsea el archivo XML y extrae los datos de él
      * @param modeloTablaDescargas 
      * @param listaFicherosCompartidos para poder acceder al JList
+     * @throws Exception Excepcion que indica que hay referencias perdidias en el xml 
      */
     public ArrayList<EstrArchivo> parsearDocumento(javax.swing.DefaultListModel listaCompartidos, ClienteP2P interfaz) {
-        Element docEle = DOM.getDocumentElement(); // Obtiene el documento raiz
+        boolean referenciasObsoletas = false;
+   	  Element docEle = DOM.getDocumentElement(); // Obtiene el documento raiz
         // Buscamos el nodo de más alto nivel: <archivo></archivo>
         NodeList nl = docEle.getElementsByTagName(ETIQUETA_ARCHIVO);
         ArrayList<EstrArchivo> eas=new ArrayList<EstrArchivo>();
@@ -157,16 +153,38 @@ public class ParserXML {
                         descargado+=partes[j/2].fin-partes[j/2].inicio;
                     }
                     
-                    // Reservamos memoria para el archivo i-ésimo
-                    EstrArchivo e=new EstrArchivo(info, partes);
-                    eas.add(e);
+                    // Antes de añadir el archivo i-ésimo del XML, comprobamos que exista
+                    if(existeArchivo(ruta)) { // Si existe, se añade, sino no
+                  	  // Reservamos memoria para el archivo i-ésimo
+                  	  EstrArchivo e=new EstrArchivo(info, partes);
+                  	  eas.add(e);
 
-                    if(seed) listaCompartidos.addElement(ruta); // Con esto se añade a la interfaz
-                    else interfaz.nuevaDescarga(e, (int)(descargado*100/tam));
-                    
+                  	  if(seed) listaCompartidos.addElement(ruta); // Con esto se añade a la interfaz
+                    	  else interfaz.nuevaDescarga(e, (int)(descargado*100/tam));
+                    } else  
+                  	  // Como hay al menos una referencia que está obsoleta, lo notificamos
+                  	  referenciasObsoletas = true;
                 } // Fin del if(comprobacion es un nodo)
             } // Fin del for (int i = 0; i < nl.getLength(); i++)
         }
+        // Comprobamos si es necesario actualizar el xml (si hay archivos no encontrados)
+        if(referenciasObsoletas) {
+      	  Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
+      	  // Recorremos todos los elementos de la lista y los metemos en el xml
+           for (int i=0; i<eas.size(); i++)
+               bib.insertarNuevoArchivo(eas.get(i));
+           bib.guardarXML();  // Guardamos el contenido actualizado en el XML
+        }      	  
         return eas;
     }
+
+	/**
+	 * Método que comprueba si existe un archivo el archivo pasado como parámetro
+	 * @param ruta Archivo al que se le va a comprobar su existencia
+	 * @return true si existe, false en caso contrario
+	 */
+	private boolean existeArchivo(String rutaArchivo) {
+		File f = new File(rutaArchivo);
+		return f.exists();
+	}
 }

@@ -19,7 +19,6 @@ import com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl;
  * @author sema
  */
 public class Biblioteca {
-
     // Etiquetas del archivo XML
     private static final String ETIQUETA_BIBLIO = "biblioteca";
     private static final String ETIQUETA_ARCHIVO = "archivo";

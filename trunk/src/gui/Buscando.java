@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package gui;
 
@@ -19,14 +15,12 @@ import cliente.UsuarioClient;
  * @author sema
  */
 public class Buscando extends Thread {
-
-    private javax.swing.JLabel _barraProgreso;
-    private gui.ClienteP2P _interfaz;
-    
-    private UsuarioClient _cliente;
     private String _nombre;
+    private UsuarioClient _cliente;
+    private gui.ClienteP2P _interfaz;
+    private javax.swing.JLabel _barraProgreso;
+    private DefaultTableModel _modeloTablaBusqueda;
     private Hashtable<Integer,Archivo> _tablaResBusqueda;
-	private DefaultTableModel _modeloTablaBusqueda;
 
     /**
      * Constructor parametrizado del hilo "Buscando". Este recibe las referencias
@@ -41,7 +35,10 @@ public class Buscando extends Thread {
         _tablaResBusqueda=tablaResBusqueda;
     }
 
-    
+    /**
+     * Método setter para el atributo "_nombre"
+     * @param nombre Cadena que se va a asignar al atributo
+     */
     public void setNombre(String nombre) {
     	_nombre=nombre;
     }
@@ -50,9 +47,6 @@ public class Buscando extends Thread {
      * Método que se ejecuta al realizar hilo.start()
      */
     public void run() {
-
-        //interfaz.opcionP2PLimpiarResultadosActionPerformed(new ActionEvent);
-
         _interfaz.cambiarEstado("Buscando coincidencias..."); // Informar de la búsqueda
         _interfaz.setCursor(new Cursor(Cursor.WAIT_CURSOR)); // Pone el cursor en "loading"
         _barraProgreso.setVisible(true); // Pone visible la animación
@@ -83,12 +77,6 @@ public class Buscando extends Thread {
         _interfaz.cambiarEstado("Búsqueda terminada..."); // Informamos del hecho
         _barraProgreso.setVisible(false); // Ocultamos la animación
         _interfaz.setCursor(new Cursor(Cursor.DEFAULT_CURSOR)); // Pone el puntero en normal
-//        try {
-//            Thread.sleep(9000); // Establecemos un tiempo prudencial para mostrar el mensaje en el estado
-//        } catch (InterruptedException ex) {
-//            Logger.getLogger(Buscando.class.getName()).log(Level.SEVERE, null, ex);
-//        }
         _interfaz.cambiarEstado(""); // Y ponemos el texto por defecto
     }
-
 }
