@@ -122,11 +122,6 @@ public class ArchivoImpl extends ArchivoPOA {
 			}
 			
 			_partes.put(id, partes);
-			
-			System.out.println("ACTUALIZADO...");
-			for(int j=0;j<partes.length;j++) {
-				System.out.println("["+partes[j].inicio+"-"+partes[j].fin+"]");
-			}
 		}
 	}
 }
