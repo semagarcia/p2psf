@@ -85,6 +85,11 @@ System.out.println("Se ha sumado "+(float)(_pieza.fin-_pieza.inicio)*100/_tam);
 			_pieza.pedido=false;
 			_usuarios.put(_idUsuario, false);
 		}
+		else {
+			_pieza.descargado=false;
+			_pieza.pedido=false;
+			_usuarios.put(_idUsuario, false);
+		}
 		
 		//Despierta al hilo Downloader si no lo está ya.
 		if(_downloader.esperar.getActual()==0)
