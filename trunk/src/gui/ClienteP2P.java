@@ -1,6 +1,5 @@
 package gui;
 
-import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -14,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -28,7 +26,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 import cliente.Downloader;
 import cliente.EstrArchivo;
-import cliente.Semaforo;
 import cliente.UsuarioClient;
 import cliente.infoArchivo;
 import cliente.parteArchivo;
@@ -902,13 +899,6 @@ public class ClienteP2P extends javax.swing.JFrame {
     }
 
     /**
-     * Método que limpia las descargas completadas
-     * @param evt
-     */
-    private void opcionP2PLimpiarDescargasActionPerformed(java.awt.event.ActionEvent evt) {
-    }
-
-    /**
      * Muestra la ventana típica de ayuda
      * @param evt
      */
@@ -1273,7 +1263,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 		} catch (FileNotFoundException e) {
         	//Si no encuentra el fichero de configuración muestra el diálogo para introducir
         	//las opciones con unos parámetros por defecto.
-	        _tamBloque=1048576;
+	        _tamBloque=512000;
 	        _conexionesMaximas=10;
 	        _ipservidor="127.0.0.1";
 	        _iplocal="127.0.0.1";
@@ -1342,14 +1332,19 @@ public class ClienteP2P extends javax.swing.JFrame {
      */
     public void actualizarDescarga(String archivo, int porcentaje) {
         JProgressBar aux = null;
-
-        for(int i=0; i<_modeloTablaDescargas.getRowCount(); i++) {
+        boolean encontrado=false;
+        int i=0;
+        
+        while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
             if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
+            	encontrado=true;
                 aux = (JProgressBar) _modeloTablaDescargas.getValueAt(i, 2);
-                aux.setString(String.valueOf(porcentaje) + "%");
+                aux.setString(porcentaje+"%");
                 aux.setValue(porcentaje);
                 _tablaDescargas.repaint();
             }
+            else
+            	i++;
         }
     }
     
