@@ -80,21 +80,18 @@ public class Downloader extends Thread {
 
 
 	private boolean buscarPieza(int indicePeer, int indiceDescarga) {
-		boolean aux=false;
+		boolean encontrado=false;
 		parteArchivo pieza=_descargar.get(indiceDescarga);
 		parteArchivo[] piezasPeer=_arch.getPartes(indicePeer);
 		int i=0;
 		
-		boolean encontradoSuperior=false;
-		while(!encontradoSuperior && i<piezasPeer.length)
-			if(pieza.fin>piezasPeer[i].fin) encontradoSuperior=true;
+		while(i<piezasPeer.length && !encontrado) {
+			if(pieza.inicio>=piezasPeer[i].inicio && pieza.fin<=piezasPeer[i].fin)
+				encontrado=true;
 			else i++;
+		}
 		
-		if(i<piezasPeer.length)
-			if(pieza.inicio>=piezasPeer[i].inicio)
-				aux=true;
-		
-		return aux;
+		return encontrado;
 	}
 	
 
