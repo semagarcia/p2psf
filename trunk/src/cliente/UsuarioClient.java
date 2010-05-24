@@ -163,12 +163,12 @@ public class UsuarioClient {
 		return desconectado;
 	}
 
-	public Downloader descargar(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, JProgressBar barra) {
+	public Downloader descargar(Archivo arch, parteArchivo[] partes, float porcentaje, int numConex, long tamPieza, String ruta, JProgressBar barra) {
 		//lanza el hilo de descarga para el archivo
 		Downloader d=null;
 		
 		if(_id!=-1)
-			d=new Downloader(arch, partes, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas, _interfaz);
+			d=new Downloader(arch, partes, porcentaje, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas, _interfaz);
 		
 		return d;
 	}

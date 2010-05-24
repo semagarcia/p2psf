@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -13,6 +14,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.zip.CRC32;
@@ -25,6 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 import cliente.Downloader;
 import cliente.EstrArchivo;
+import cliente.Semaforo;
 import cliente.UsuarioClient;
 import cliente.infoArchivo;
 import cliente.parteArchivo;
@@ -39,6 +43,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 	private Buscando _hiloBusqueda;
 	private Hashtable<Integer,Archivo> _tablaResBusqueda;
 	private Hashtable<String,Downloader> _descargasActuales;
+	private Hashtable<EstrArchivo, JProgressBar> _descargasPendientes;
     private int _tamBloque;
     private int _conexionesMaximas;
     private String _ipservidor;
@@ -48,7 +53,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     private String _nombreBiblioteca;
     private boolean _conectado = false;
     private MenuContextual _menuContextual;
-    private DefaultTableModel _modeloTablaDescargas;
+    private DefaultTableModel _modeloTablaDescargas = new DefaultTableModel();
     private DefaultListModel _modeloListaRecursos = new DefaultListModel();
     private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
     private UsuarioClient _cliente;
@@ -59,6 +64,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     	_hiloBusqueda = null;
     	_tablaResBusqueda=new Hashtable<Integer,Archivo>();
     	_descargasActuales=new Hashtable<String,Downloader>();
+    	_descargasPendientes=new Hashtable<EstrArchivo, JProgressBar>();
     	_easTmp=new ArrayList<EstrArchivo>();
     	
     	try {
@@ -95,20 +101,19 @@ public class ClienteP2P extends javax.swing.JFrame {
         _modeloTablaBusqueda.setColumnIdentifiers(headersResultados);
 
         // Para especificar todo lo relativo a la tabla de las descargas
-        _modeloTablaDescargas = new DefaultTableModel(); // Instanciamos el modelo por defecto
         // Asignamos la cabecera de la tabla
-        _modeloTablaDescargas.setColumnIdentifiers(new Object []{"Archivo", "Ruta al archivo", "Porcentaje Completado"});
+        _modeloTablaDescargas.setColumnIdentifiers(new Object []{"Archivo", "Ruta al archivo", "Porcentaje Completado", "Conexiones actuales"});
         _tablaDescargas.setModel(_modeloTablaDescargas); // Indicamos qué modelo va a utilizar la tabla        
         // Hacemos que la tercera columna (la de )
         //_tablaDescargas.getColumn("Progress").setCellRenderer(new MiBarraProgreso());
         _tablaDescargas.getColumn("Porcentaje Completado").setCellRenderer(new MiBarraProgreso());
         
+        // Implementación del menú contextual para la tabla de descargas
+        _menuContextual = new MenuContextual(_tablaDescargas, _descargasActuales, this);
+        
         // Al iniciar la aplicación se cargan desde el fichero XML, la lista
         // de ficheros/recursos compartidos
         cargarBiblioteca();
-        
-        // Implementación del menú contextual para la tabla de descargas
-        _menuContextual = new MenuContextual(_tablaDescargas, _descargasActuales);
     }
     
     /**
@@ -764,6 +769,25 @@ public class ClienteP2P extends javax.swing.JFrame {
     			_cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto,this);
     			_conectado = _cliente.conectar();
     			_cliente.anyadir(_easTmp);
+    			
+    			//Recorre las descargas pendientes para crear los hilos downloader
+    			Enumeration<EstrArchivo> keys = _descargasPendientes.keys();
+    			Archivo a;
+    			Downloader d;
+    			EstrArchivo e;
+    			while(keys.hasMoreElements()) {
+    				e=keys.nextElement();
+    				a=_cliente.buscar(e.info.nombre);
+    				if(a!=null) {
+    					long sum=0;
+    					for(int i=0;i<e.partes.length;i++) {
+    						sum+=e.partes[i].fin-e.partes[i].inicio;
+    					}
+    					float porcentaje=sum*100/e.info.tam;
+    					d=_cliente.descargar(a, e.partes, porcentaje, _conexionesMaximas, _tamBloque, e.info.ruta, _descargasPendientes.remove(e));
+    					_descargasActuales.put(e.info.ruta, d);
+    				}
+    			}
     		}
     		catch(Exception e) {
     			javax.swing.JOptionPane.showMessageDialog(this,
@@ -779,7 +803,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     			botonBuscar.setEnabled(true);
         	
     			//Deshabilitar acciones descargas
-    			_menuContextual.parar();
+    			_menuContextual.mostrarParado();
     			cambiarEstado("");
     		}
     	}
@@ -800,6 +824,20 @@ public class ClienteP2P extends javax.swing.JFrame {
      */
     public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {
     	if(_conectado) {
+    		
+    		//Para los hilos Downloader
+    		Enumeration<String> rutas= _descargasActuales.keys();
+    		Downloader d;
+    		String ruta;
+    		while(rutas.hasMoreElements()) {
+    			ruta=rutas.nextElement();
+    			d=_descargasActuales.get(ruta);
+    			d.parar();
+    			_descargasActuales.put(ruta, d.copia());
+    			//Deshabilitar acciones descargas
+    			_menuContextual.parar(d.ruta);
+    		}
+    		
     		_conectado = !_cliente.desconectar();
     		_cliente=null;
     	
@@ -808,9 +846,6 @@ public class ClienteP2P extends javax.swing.JFrame {
     			iconConectar.setEnabled(true);
     			iconDesconectar.setEnabled(false);
     			botonBuscar.setEnabled(false);
-        	
-    			//Deshabilitar acciones descargas
-    			_menuContextual.parar();
         	
     			limpiarResultadosBusqueda();
     		}
@@ -976,6 +1011,7 @@ public class ClienteP2P extends javax.swing.JFrame {
             }
         }
     }
+    
 
     /**
      * Función que obtiene la informacion de un fichero
@@ -983,9 +1019,7 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @return
      */
     private infoArchivo getInfoArchivo(File file) {
-   	 // Indicamos un mensajito informativo
-   	 cambiarEstado("Calculando la suma de verificacion...");
-   	 infoArchivo aux = new infoArchivo();
+   	 	infoArchivo aux = new infoArchivo();
         CheckedInputStream suma = null;
 
         try { // Se lee el fichero y se va creando el checksum
@@ -1006,9 +1040,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         aux.ruta=file.getPath();
         aux.checksum=suma.getChecksum().getValue();
         aux.tam=file.length();    	
-        cambiarEstado(""); // Volvemos al estado original
-        
-		return aux;
+
+        return aux;
 	}
 
 	/**
@@ -1048,27 +1081,35 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param evt
      */
     void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {
-        Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
-        String resultado="";
-        
-        // Recorremos todos los elementos de la lista y los metemos en el xml
-        for (int i=0; i<_easTmp.size(); i++)
-            bib.insertarNuevoArchivo(_easTmp.get(i));
-
-        // Comprobamos que se ha guardado correctamente
-        if(bib.guardarXML()) // Archivo guardado correctamente
-            resultado+="¡Archivo \""+_nombreBiblioteca+"\" generado correctamente!";
+    	String resultado="";
+    	
+    	if(almacenarBiblioteca()) // Comprobamos que se ha guardado correctamente
+    	    resultado+="¡Archivo \""+_nombreBiblioteca+"\" generado correctamente!";
         else // Error al guardar el archivo
             resultado+="Error al generar el archivo \""+_nombreBiblioteca+"\"";
         
         if(_conectado)
         	_cliente.anyadir(_easTmp);
-        
         // Mostramos el mensaje mediante una ventanita
         javax.swing.JOptionPane.showMessageDialog(this,resultado);
     }
 
-    /**
+    private boolean almacenarBiblioteca() {
+    	Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
+        boolean resultado=false;
+        
+        // Recorremos todos los elementos de la lista y los metemos en el xml
+        for (int i=0; i<_easTmp.size(); i++) {
+            bib.insertarNuevoArchivo(_easTmp.get(i));
+        }
+
+        if(bib.guardarXML()) // Archivo guardado correctamente
+            resultado=true;
+
+		return resultado;
+	}
+
+	/**
      * Método que muestra la ventana de configuración de la aplicación
      * @param evt
      */
@@ -1153,26 +1194,34 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param r Ruta donde el archivo está siendo o será almacenado
      * @param c Porcentaje completado
      */
-    public void nuevaDescarga(Archivo a, parteArchivo[] partes, int p) {
-    	if(_conectado) {
-    		String ruta=_rutaDescargas+a.nombre();
-    		Downloader d;
+    public void nuevaDescarga(Archivo a, parteArchivo[] partes, float p) {
+   		String ruta=_rutaDescargas+a.nombre();
+   		Downloader d;
 
-    		JProgressBar barra = crearBarraDescarga(p, String.valueOf(p)+"%");
-    		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra});
-    		d=_cliente.descargar(a, partes, _conexionesMaximas, _tamBloque, ruta, barra);
-    		if(d!=null) {
-    			_descargasActuales.put(ruta, d);
-    			_menuContextual.nuevoEstado(ruta);
-    			System.out.println("Agrandando el vector");    		
-    		}
-    	}
+   		JProgressBar barra = crearBarraDescarga(p, String.valueOf((int)p)+"%");
+   		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra, 0});
+		_menuContextual.nuevoEstado(ruta);
+   		d=_cliente.descargar(a, partes, p, _conexionesMaximas, _tamBloque, ruta, barra);
+		_descargasActuales.put(ruta, d);
     }
     
     //Metodo para anyadir las descargas activas al iniciar la aplicación
-	public void nuevaDescarga(EstrArchivo e, int p) {
+	public void nuevaDescarga(EstrArchivo e, float p) {
 		String ruta=_rutaDescargas+e.info.nombre;
-      _modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, crearBarraDescarga(p, String.valueOf(p)+"%")});
+   		Downloader d;
+
+   		JProgressBar barra=crearBarraDescarga(p, String.valueOf((int)p)+"%");
+   		_modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, barra, 0});
+		_menuContextual.nuevoEstado(ruta);
+		Archivo a=null;
+		if(conectado())
+			a=_cliente.buscar(e.info.nombre);
+		if(a!=null) {
+			d=_cliente.descargar(a, e.partes, p, _conexionesMaximas, _tamBloque, ruta, barra);
+			_descargasActuales.put(ruta, d);
+		}
+		else
+			_descargasPendientes.put(e,barra);
 	}
 
     /**
@@ -1180,7 +1229,8 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param fila Numero de fila a eliminar
      */
     public void eliminarDescarga(int fila) {
-        	_modeloTablaDescargas.removeRow(fila);
+        _modeloTablaDescargas.removeRow(fila);
+        _tablaDescargas.setModel(_modeloTablaDescargas);
     }
 
     /**
@@ -1199,8 +1249,20 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        _iplocal=entrada.nextLine();
 	        _puerto=Integer.valueOf(entrada.nextLine());
 	        _rutaDescargas=entrada.nextLine();
+
 	        File f=new File(_rutaDescargas);
-	        if(!f.isDirectory()) f.mkdir();
+	        _rutaDescargas=f.getAbsolutePath();
+	        if(!_rutaDescargas.endsWith("/"))
+	        	_rutaDescargas=_rutaDescargas.concat("/");
+	        
+	        
+	        if(!f.isDirectory())
+	        	if(!f.mkdir()) {
+	    	        javax.swing.JOptionPane.showMessageDialog(this,
+	    	        		"El directorio de descargas no puede crearse. Escoja otro.",
+	    	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
+	            	opcionArchivoOpcionesActionPerformed(null);
+	        	}
 	        
 	        entrada.close();
 		} catch (FileNotFoundException e) {
@@ -1211,7 +1273,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 	        _ipservidor="127.0.0.1";
 	        _iplocal="127.0.0.1";
 	        _puerto=2000;
-	        _rutaDescargas="./Descargas/";
+	        _rutaDescargas="Descargas/";
 	        javax.swing.JOptionPane.showMessageDialog(this,
 	        		"Debe establecer las opciones de configuración",
 	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -1233,6 +1295,9 @@ public class ClienteP2P extends javax.swing.JFrame {
         _puerto=puerto;
         _rutaDescargas=rutaDescargas;
         
+        File f=new File(_rutaDescargas);
+        if(!f.isDirectory()) f.mkdir();
+        
         PrintWriter salida;
         
         salida=new PrintWriter(new FileWriter("opciones.txt"));
@@ -1253,10 +1318,10 @@ public class ClienteP2P extends javax.swing.JFrame {
      * @param informacion Muestra esta cadena de texto dentro de la barra
      * @return
      */
-    public JProgressBar crearBarraDescarga(int porcentaje, String informacion) {
+    public JProgressBar crearBarraDescarga(float porcentaje, String informacion) {
         JProgressBar progressBar = new JProgressBar(0, 100);
 
-        progressBar.setValue(porcentaje); // Porcentaje actual
+        progressBar.setValue((int)porcentaje); // Porcentaje actual
         progressBar.setString(informacion); // Información a mostrar
         progressBar.setStringPainted(true); // Mostrar información en la barra
 
@@ -1294,28 +1359,24 @@ public class ClienteP2P extends javax.swing.JFrame {
  	/**
  	 * Mueve la descarga finalizada a compartidos
  	 */
- 	public synchronized void finalizarDescarga(String archivo, String ruta) {
+ 	public synchronized void finalizarDescarga(EstrArchivo archivo) {
  		boolean encontrado=false;
  		int i=0;
- 		
-// 		System.out.println("antes");
-// 		try {
-//			Thread.sleep(3000);
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//		System.out.println("despues");
- 		
- 		_descargasActuales.remove(ruta);
+ 		 		
+ 		_descargasActuales.remove(archivo.info.ruta);
  		
  		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
-             if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
+             if(archivo.info.nombre.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
              else i++;
          }
  		if(encontrado)
  			eliminarDescarga(i);
  		
- 		_modeloListaRecursos.addElement(ruta); 		
+ 		_modeloListaRecursos.addElement(archivo.info.ruta);
+ 		
+ 		_easTmp.add(archivo);
+ 		
+ 		almacenarBiblioteca();
  	}
 
     /**
@@ -1376,4 +1437,35 @@ public class ClienteP2P extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator separadorArchivo;
     private javax.swing.JLabel valorEstadoActual;
     // End of variables declaration//GEN-END:variables
+
+	public void almacenarDescarga(EstrArchivo estrArchivo) {
+		boolean encontrado=false;
+		int i=0;
+		while(!encontrado && i<_easTmp.size()) {
+			if(_easTmp.get(i).info.ruta.equals(estrArchivo.info.ruta)) {
+				encontrado=true;
+				_easTmp.remove(i);
+			}
+			else i++;
+		}
+		_easTmp.add(estrArchivo);
+		almacenarBiblioteca();
+	}
+
+	public synchronized void sumarConexiones(String ruta, int num) {
+		boolean encontrado=false;
+		int i=0;
+		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+			if(_modeloTablaDescargas.getValueAt(i, 1).equals(ruta))
+				encontrado=true;
+			else
+				i++;
+		}
+
+		int conex;
+		if(encontrado) {
+			conex=(Integer)_modeloTablaDescargas.getValueAt(i, 3)+num;
+			_modeloTablaDescargas.setValueAt(conex, i, 3);
+		}
+	}
 }

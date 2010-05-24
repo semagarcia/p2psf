@@ -1,5 +1,7 @@
 package cliente;
 
+import gui.ClienteP2P;
+
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ public class Peticion extends Thread {
 	private long _checksum;
 	private Archivo _arch;
 	private int _idUsuario;
+	private ClienteP2P _interfaz;
 
 	
 	/**
@@ -43,7 +46,7 @@ public class Peticion extends Thread {
 
 	
 	public Peticion(Usuario usu, parteArchivo pieza, Downloader downloader, Hashtable<Integer, Boolean> usuarios,
-			int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch) throws MiddlewareException {
+			int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch, ClienteP2P interfaz) throws MiddlewareException {
 		_downloader=downloader;
 		_usuario=usu;
 		_arch=arch;
@@ -55,7 +58,7 @@ public class Peticion extends Thread {
 		_idUsuario=idUsuario;
 		_miId=miId;
 		_eas=eas;
-
+		_interfaz=interfaz;
 	}
 	
 	
@@ -77,6 +80,7 @@ public class Peticion extends Thread {
 			escribir(parte);
 			anyadirParte();
 			_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
+System.out.println("Se ha sumado "+(float)(_pieza.fin-_pieza.inicio)*100/_tam);
 			_pieza.descargado=true;
 			_pieza.pedido=false;
 			_usuarios.put(_idUsuario, false);
@@ -87,6 +91,8 @@ public class Peticion extends Thread {
 			_downloader.esperar.subir();
 		_downloader.escribir.subir();
 		_downloader.lanzados.subir();
+		
+		_interfaz.sumarConexiones(_downloader.ruta, -1);
 	}
 
 	

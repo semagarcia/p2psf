@@ -29,6 +29,7 @@ public class Downloader extends Thread {
 	private float _porcentaje;
 	private ClienteP2P _interfaz;
 	private String _nombre;
+	private boolean _parar;
 	
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
@@ -115,7 +116,7 @@ public class Downloader extends Thread {
 		Peticion p=null;
 		
 		try {
-			p=new Peticion(_coord.getUsuario(idUsuario), pieza, this, usuarios, idUsuario, _miId, _eas, _arch);
+			p=new Peticion(_coord.getUsuario(idUsuario), pieza, this, usuarios, idUsuario, _miId, _eas, _arch, _interfaz);
 		}
 		catch (MiddlewareException e) {
 			e.printStackTrace();
@@ -126,7 +127,7 @@ public class Downloader extends Thread {
 
 	
 	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
-	public Downloader(Archivo arch, parteArchivo[] partes, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, ClienteP2P interfaz) {
+	public Downloader(Archivo arch, parteArchivo[] partes, float porcentaje, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, ClienteP2P interfaz) {
 		super();
 		_arch=arch;
 		_nombre=_arch.nombre();
@@ -142,33 +143,64 @@ public class Downloader extends Thread {
 		_peersSolicitados=new Hashtable<Integer, Boolean>();
 		this.accederEas=accederEas;
 		_eas=eas;
-		_porcentaje=new Float(0);
 		_interfaz=interfaz;
+		_parar=false;
+		_porcentaje=new Float(porcentaje);
 		
 		calcularDescargas(partes);
 	}
 	
-
+	public Downloader(Archivo arch, int numConex, String ruta, long tamPieza, Coordinador coord, int miId, Hashtable<String,EstrArchivo> eas, Semaforo accederEas, Float porcentaje, ClienteP2P interfaz, ArrayList<parteArchivo> descargar) {
+		super();
+		_arch=arch;
+		_nombre=_arch.nombre();
+		lanzados=new Semaforo(numConex);
+		escribir=new Semaforo(1);
+		esperar=new Semaforo(1);
+		_tamPieza=tamPieza;
+		this.ruta=ruta;
+		_coord=coord;
+		_miId=miId;
+		_seedsSolicitados=new Hashtable<Integer, Boolean>();
+		_peersSolicitados=new Hashtable<Integer, Boolean>();
+		this.accederEas=accederEas;
+		_eas=eas;
+		_porcentaje=porcentaje;
+		_interfaz=interfaz;
+		_parar=false;
+		_descargar=descargar;
+	}
+	
+	
+	
 	// Comienza a descargar el archivo lanzando un hilo por cada petición.
 	public void run() {
 		try {
 
-			int i=0;
-		
-			while(pedir()) {
+			while(pedir() && !_parar) {
 				esperar.bajar();  //Evita una espera activa. Espera a que finalice el primer hilo peticion lanzado en la iteracion anterior.
-				actualizarUsuarios();		
+				actualizarUsuarios();
 				lanzarPeticiones();
-				i++;
 			}
 			
-			//Espera a que finalicen todos los hilos para mover la descarga a compartidos
+			//Espera a que finalicen todos los hilos
 			for(int j=0;j<lanzados.getInicial();j++)
 				lanzados.bajar();
 
-			//Mueve la descarga a compartidos en la interfaz
-			_interfaz.finalizarDescarga(_nombre,ruta);
-
+			if(!pedir()) {  //Descarga finalizada
+				//Mueve la descarga a compartidos en la interfaz
+				accederEas.bajar();
+				_interfaz.finalizarDescarga(_eas.get(_nombre));
+				accederEas.subir();
+			}
+			else {
+				//Almacena el estado de la descarga
+				accederEas.bajar();
+				_interfaz.almacenarDescarga(_eas.get(_nombre));
+				accederEas.subir();
+			}
+				
+			
 		}
 		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
 			System.out.println("OBJECT_NOT_EXIST");
@@ -179,6 +211,9 @@ public class Downloader extends Thread {
 	}
 
 
+	public void parar() {
+		_parar=true;
+	}
 	
 	private void lanzarPeticiones() {
 		Enumeration<Integer> keys;
@@ -231,7 +266,11 @@ public class Downloader extends Thread {
 			lanzados.bajar();
 			hilos.get(i).start();
 		}
-
+		//Establece el numero de conexiones actuales en la interfaz
+		_interfaz.sumarConexiones(ruta, i);
+		
+		//Si no se ha lanzado ningún hilo, hay que realizar otra iteracion
+		if(hilos.size()==0) esperar.subir();
 	}
 
 
@@ -310,5 +349,11 @@ public class Downloader extends Thread {
 	public void addPorcentaje(float l) {
 		_porcentaje+=l;
 		_interfaz.actualizarDescarga(_nombre, Math.round(_porcentaje));
+	}
+
+
+
+	public Downloader copia() {
+		return new Downloader(_arch, this.lanzados.getInicial(), ruta, _tamPieza, _coord, _miId, _eas, accederEas, _porcentaje, _interfaz, _descargar);
 	}
 }

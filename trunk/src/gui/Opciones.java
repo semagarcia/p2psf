@@ -2,6 +2,7 @@
 package gui;
 
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.JFrame;
 
@@ -270,17 +271,19 @@ public class Opciones extends javax.swing.JDialog {
      * @param evt
      */
     private void botonAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonAceptarActionPerformed
+    	boolean ok=true;
+    	
         // Si es mayor que 0, devolvemos el valor
         if(Integer.parseInt(cajaTamBloque.getText()) > 0)
             _tam = Integer.parseInt(cajaTamBloque.getText());
         else
-            _tam = 0;
+            _tam = 10;
 
         // Lo mismo con las conexiones mÃ¡ximas
         if(Integer.parseInt(cajaConexMax.getText()) > 0)
             _nConex = Integer.parseInt(cajaConexMax.getText());
         else
-            _nConex = 0;
+            _nConex = 1048576;
         
         // Direccion IP del Servidor
         _ipservidor = cajaIPServidor.getText();
@@ -295,21 +298,32 @@ public class Opciones extends javax.swing.JDialog {
            _puerto = 0;
 
         _rutaDescargas = cajaRuta.getText();
+        File f=new File(_rutaDescargas);
+        _rutaDescargas=f.getAbsolutePath();
         if(!_rutaDescargas.endsWith("/"))
         	_rutaDescargas=_rutaDescargas.concat("/");
         
-        try {
-			_interfaz.establecerOpciones(_tam, _nConex, _ipservidor, _iplocal, _puerto, _rutaDescargas);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-        this.setVisible(false);
-        
-        if(_interfaz.conectado()) {
-        	_interfaz.opcionArchivoLogoutActionPerformed(null);
-        	_interfaz.opcionArchivoLoginActionPerformed(null);
+        if(!f.isDirectory()) {
+        	if(!f.mkdir()) {
+	        javax.swing.JOptionPane.showMessageDialog(this,
+	        		"El directorio de descargas no puede crearse. Escoja otro.",
+	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
+	        ok=false;
+        	}
+        }
+
+        if(ok) {
+        	try {
+        		_interfaz.establecerOpciones(_tam, _nConex, _ipservidor, _iplocal, _puerto, _rutaDescargas);
+        	}
+        	catch (IOException e) {
+        		e.printStackTrace();
+        	}
+        	if(_interfaz.conectado()) {
+        		_interfaz.opcionArchivoLogoutActionPerformed(null);
+        		_interfaz.opcionArchivoLoginActionPerformed(null);
+        	}
+        	this.setVisible(false);
         }
     }
 
@@ -319,7 +333,21 @@ public class Opciones extends javax.swing.JDialog {
      * @param evt
      */
     private void botonCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonCancelarActionPerformed
-        this.setVisible(false);
+        boolean ok=true;
+        File f=new File(_rutaDescargas);
+        _rutaDescargas=f.getAbsolutePath();
+        
+        if(!f.isDirectory()) {
+        	if(!f.mkdir()) {
+	        javax.swing.JOptionPane.showMessageDialog(this,
+	        		"El directorio de descargas no puede crearse. Escoja otro.",
+	        		"Error de configuración", javax.swing.JOptionPane.ERROR_MESSAGE);
+	        ok=false;
+        	}
+        }
+        
+        if(ok)
+        	this.setVisible(false);
     }
 
     // Variables declaration
