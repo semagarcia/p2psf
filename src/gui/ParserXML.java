@@ -160,7 +160,7 @@ public class ParserXML {
                   	  eas.add(e);
 
                   	  if(seed) listaCompartidos.addElement(ruta); // Con esto se añade a la interfaz
-                    	  else interfaz.nuevaDescarga(e, (int)(descargado*100/tam));
+                    	  else interfaz.nuevaDescarga(e, (float)(descargado*100/tam));
                     } else  
                   	  // Como hay al menos una referencia que está obsoleta, lo notificamos
                   	  referenciasObsoletas = true;
