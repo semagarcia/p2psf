@@ -8,8 +8,6 @@ import java.util.Hashtable;
 
 import javax.swing.JProgressBar;
 
-import org.GNOME.Accessibility._MatchRuleStub;
-
 import middleware.JavaORB;
 import middleware.Middleware;
 import middleware.MiddlewareException;
@@ -120,6 +118,7 @@ public class UsuarioClient {
 			
 			try {
 				_id=_coord.conectar(archivos, _hiloServer.getRef());
+				_hiloServer.setId(_id);
 				conectado=true;
 			}
 			catch (MiddlewareException e) {
