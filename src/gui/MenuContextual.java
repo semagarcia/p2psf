@@ -144,8 +144,7 @@ public class MenuContextual extends JFrame {
    		 } else if(e.getActionCommand().equals(_pausarDescarga)) {
    			 mostrarParado();
    			 _estadoDescargas.put((String)_miTabla.getValueAt(_filaSeleccionada, 1),false);
-   			 _descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).parar();
-   			 _descargasActuales.put((String)_miTabla.getValueAt(_filaSeleccionada,1),_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).copia());
+   			 _descargasActuales.put((String)_miTabla.getValueAt(_filaSeleccionada,1),_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).parar());
    		 } else if(e.getActionCommand().equals(_cancelarDescarga)) {
    			 System.out.println("Uy, seguro que quieres cancelarla?");
    		 }
