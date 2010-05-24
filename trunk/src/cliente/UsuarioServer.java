@@ -43,9 +43,4 @@ public class UsuarioServer extends Thread {
 		System.out.println("Usuario a la escucha...");
 		Middleware.ejecutar();
 	}
-
-
-	public void setId(int id) {
-		_usuImpl.setId(id);
-	}
 }

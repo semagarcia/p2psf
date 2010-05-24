@@ -65,7 +65,7 @@ public class Peticion extends Thread {
 	public void run() {
 		byte[] parte;
 		
-		System.out.println("PIDO "+_pieza.inicio+"-"+_pieza.fin+" a "+ _usuario.getId());
+		System.out.println("PIDO "+_pieza.inicio+"-"+_pieza.fin+_idUsuario);
 		
 		try {
 			parte=_usuario.solicitarParte(_nombre, _pieza.inicio, _pieza.fin);

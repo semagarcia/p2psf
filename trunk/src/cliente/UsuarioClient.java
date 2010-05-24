@@ -118,7 +118,6 @@ public class UsuarioClient {
 			
 			try {
 				_id=_coord.conectar(archivos, _hiloServer.getRef());
-				_hiloServer.setId(_id);
 				conectado=true;
 			}
 			catch (MiddlewareException e) {
