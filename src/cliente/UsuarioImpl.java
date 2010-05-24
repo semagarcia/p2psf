@@ -6,7 +6,7 @@ import java.util.Hashtable;
 
 public class UsuarioImpl extends UsuarioPOA {
 	
-	private float _prueba;
+	private int _id;
 	private Hashtable<String, EstrArchivo> _eas;
 	private Semaforo _accederEas;
 	
@@ -15,18 +15,13 @@ public class UsuarioImpl extends UsuarioPOA {
 		super();
 		_eas=eas;
 		_accederEas=accederEas;
+		_id=-1;
 	}
 	
 	@Override
-	public String saluda() {		
-		return "Hola"+_prueba;
+	public int getId() {		
+		return _id;
 	}
-
-	
-	public void set() {
-		_prueba=new java.util.Random(System.currentTimeMillis()).nextFloat();
-	}
-
 
 	@Override
 	public byte[] solicitarParte(String nombre, long inicio, long fin) {
@@ -54,5 +49,9 @@ public class UsuarioImpl extends UsuarioPOA {
 		}
 
 		return b;
+	}
+
+	public void setId(int id) {
+		_id=id;
 	}
 }

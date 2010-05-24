@@ -36,12 +36,16 @@ public class UsuarioServer extends Thread {
 	
 	public Usuario getRef() throws MiddlewareException {		
 		return (Usuario) Middleware.interfazSirviente(Usuario.class, _usuImpl); 
-		//(Usuario)_usuImpl;
 	}
 	
 	
 	public void run() {
 		System.out.println("Usuario a la escucha...");
 		Middleware.ejecutar();
+	}
+
+
+	public void setId(int id) {
+		_usuImpl.setId(id);
 	}
 }
