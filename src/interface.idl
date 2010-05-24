@@ -34,7 +34,6 @@ module cliente {
 	typedef sequence <octet> vByte;
 
 	interface Usuario {
-		long getId();
 		vByte solicitarParte(in string nombre, in long long inicio, in long long fin);
 	};
 };

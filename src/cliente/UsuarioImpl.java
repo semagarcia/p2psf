@@ -6,7 +6,6 @@ import java.util.Hashtable;
 
 public class UsuarioImpl extends UsuarioPOA {
 	
-	private int _id;
 	private Hashtable<String, EstrArchivo> _eas;
 	private Semaforo _accederEas;
 	
@@ -15,12 +14,6 @@ public class UsuarioImpl extends UsuarioPOA {
 		super();
 		_eas=eas;
 		_accederEas=accederEas;
-		_id=-1;
-	}
-	
-	@Override
-	public int getId() {		
-		return _id;
 	}
 
 	@Override
@@ -49,9 +42,5 @@ public class UsuarioImpl extends UsuarioPOA {
 		}
 
 		return b;
-	}
-
-	public void setId(int id) {
-		_id=id;
 	}
 }
