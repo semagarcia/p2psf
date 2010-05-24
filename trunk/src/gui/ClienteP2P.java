@@ -770,6 +770,12 @@ public class ClienteP2P extends javax.swing.JFrame {
     			_conectado = _cliente.conectar();
     			_cliente.anyadir(_easTmp);
     			
+    			//Actualiza el id del usuario en las descargas actuales
+    			Enumeration<Downloader> descargas = _descargasActuales.elements();
+    			while(descargas.hasMoreElements()) {
+    				descargas.nextElement().actualizarId(_cliente.getId());
+    			}
+    			
     			//Recorre las descargas pendientes para crear los hilos downloader
     			Enumeration<EstrArchivo> keys = _descargasPendientes.keys();
     			Archivo a;
@@ -832,8 +838,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     		while(rutas.hasMoreElements()) {
     			ruta=rutas.nextElement();
     			d=_descargasActuales.get(ruta);
-    			d.parar();
-    			_descargasActuales.put(ruta, d.copia());
+    			_descargasActuales.put(ruta, d.parar());
     			//Deshabilitar acciones descargas
     			_menuContextual.parar(d.ruta);
     		}

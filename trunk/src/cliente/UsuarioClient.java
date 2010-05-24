@@ -8,6 +8,8 @@ import java.util.Hashtable;
 
 import javax.swing.JProgressBar;
 
+import org.GNOME.Accessibility._MatchRuleStub;
+
 import middleware.JavaORB;
 import middleware.Middleware;
 import middleware.MiddlewareException;
@@ -171,5 +173,10 @@ public class UsuarioClient {
 			d=new Downloader(arch, partes, porcentaje, numConex, tamPieza, ruta, _coord, _id, _accederEas, _eas, _interfaz);
 		
 		return d;
+	}
+
+
+	public int getId() {
+		return _id;
 	}
 }

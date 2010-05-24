@@ -30,6 +30,7 @@ public class Downloader extends Thread {
 	private ClienteP2P _interfaz;
 	private String _nombre;
 	private boolean _parar;
+	private Semaforo _esperarDownloader;
 	
 
 	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
@@ -134,6 +135,7 @@ public class Downloader extends Thread {
 		lanzados=new Semaforo(numConex);
 		escribir=new Semaforo(1);
 		esperar=new Semaforo(1);
+		_esperarDownloader=new Semaforo(1);
 		_tamPieza=tamPieza;
 		this.ruta=ruta;
 		_descargar=new ArrayList<parteArchivo>();
@@ -146,7 +148,7 @@ public class Downloader extends Thread {
 		_interfaz=interfaz;
 		_parar=false;
 		_porcentaje=new Float(porcentaje);
-		
+System.out.println(_miId+":"+_porcentaje);
 		calcularDescargas(partes);
 	}
 	
@@ -157,6 +159,7 @@ public class Downloader extends Thread {
 		lanzados=new Semaforo(numConex);
 		escribir=new Semaforo(1);
 		esperar=new Semaforo(1);
+		_esperarDownloader=new Semaforo(1);
 		_tamPieza=tamPieza;
 		this.ruta=ruta;
 		_coord=coord;
@@ -169,17 +172,21 @@ public class Downloader extends Thread {
 		_interfaz=interfaz;
 		_parar=false;
 		_descargar=descargar;
-	}
+System.out.println(_miId+":"+_porcentaje);
+		}
 	
 	
 	
 	// Comienza a descargar el archivo lanzando un hilo por cada petición.
 	public void run() {
+		_esperarDownloader.bajar();
 		try {
 
 			while(pedir() && !_parar) {
 				esperar.bajar();  //Evita una espera activa. Espera a que finalice el primer hilo peticion lanzado en la iteracion anterior.
 				actualizarUsuarios();
+				mostrarDescargar();
+				mostrarUsuarios();
 				lanzarPeticiones();
 			}
 			
@@ -208,11 +215,17 @@ public class Downloader extends Thread {
 		catch (Exception e1) {
 			e1.printStackTrace();
 		}
+		
+		_esperarDownloader.subir();
 	}
 
 
-	public void parar() {
+	public Downloader parar() {
 		_parar=true;
+		
+		_esperarDownloader.bajar();
+		
+		return copia();
 	}
 	
 	private void lanzarPeticiones() {
@@ -280,18 +293,19 @@ public class Downloader extends Thread {
 		int[] seeds=_arch.getSeeds();
 		int[] peers=_arch.getPeers();
 		int key, i;
+
 		
-		// Eliminar usuarios que no estén
+		// Eliminar usuarios que no estén, y a sí mismo
 		Enumeration<Integer> aux=_seedsSolicitados.keys();
 		while(aux.hasMoreElements()) {
 			key=aux.nextElement();
-			if(!buscar(key,seeds))
+			if(!buscar(key,seeds) || key==_miId)
 				_seedsSolicitados.remove(key);
 		}
 		aux=_peersSolicitados.keys();
 		while(aux.hasMoreElements()) {
 			key=aux.nextElement();
-			if(!buscar(key,peers))
+			if(!buscar(key,peers) || key==_miId)
 				_peersSolicitados.remove(key);
 		}
 		
@@ -353,7 +367,13 @@ public class Downloader extends Thread {
 
 
 
-	public Downloader copia() {
+	private Downloader copia() {
 		return new Downloader(_arch, this.lanzados.getInicial(), ruta, _tamPieza, _coord, _miId, _eas, accederEas, _porcentaje, _interfaz, _descargar);
+	}
+
+
+
+	public void actualizarId(int id) {
+		_miId=id;
 	}
 }
