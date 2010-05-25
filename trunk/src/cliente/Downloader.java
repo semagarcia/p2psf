@@ -102,7 +102,7 @@ public class Downloader extends Thread {
 
 		// Hay que ejecutarlo en exclusión mutua, ya que podría eliminarse una pieza a descargar
 		while(!aux && i<_descargar.size()) {
-			if(!_descargar.get(i).pedido && !_descargar.get(i).descargado) aux=true;
+			if(!_descargar.get(i).descargado) aux=true;
 			else i++;
 		}
 		
@@ -145,7 +145,6 @@ public class Downloader extends Thread {
 		_interfaz=interfaz;
 		_parar=false;
 		_porcentaje=new Float(porcentaje);
-System.out.println(_miId+":"+_porcentaje);
 		calcularDescargas(partes);
 	}
 	
@@ -169,7 +168,6 @@ System.out.println(_miId+":"+_porcentaje);
 		_interfaz=interfaz;
 		_parar=false;
 		_descargar=descargar;
-System.out.println(_miId+":"+_porcentaje);
 		}
 	
 	
@@ -182,8 +180,6 @@ System.out.println(_miId+":"+_porcentaje);
 			while(pedir() && !_parar) {
 				esperar.bajar();  //Evita una espera activa. Espera a que finalice el primer hilo peticion lanzado en la iteracion anterior.
 				actualizarUsuarios();
-				mostrarDescargar();
-				mostrarUsuarios();
 				lanzarPeticiones();
 			}
 			
@@ -244,7 +240,7 @@ System.out.println(_miId+":"+_porcentaje);
 		for(i=0;i<_descargar.size();i++) {
 			//buscar pieza en los peers
 			keys=_peersSolicitados.keys();
-			while((!_descargar.get(i).pedido || !_descargar.get(i).descargado) && keys.hasMoreElements()) {
+			while(!_descargar.get(i).pedido && !_descargar.get(i).descargado && keys.hasMoreElements()) {
 				usuario=keys.nextElement();
 				if(!_peersSolicitados.get(usuario)) {
 					if(buscarPieza(usuario,i)) {
