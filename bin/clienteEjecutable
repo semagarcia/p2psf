@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# -ORBInitialPort <Puerto> -ORBInitialHost <IP servidor de nombres>
-java gui.ClienteP2P

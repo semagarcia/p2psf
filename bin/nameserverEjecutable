@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# -ORBInitialPort <Puerto> -ORBServerHost <IP local>
-tnameserv -ORBInitialPort 2000 -ORBServerHost 127.0.0.1
