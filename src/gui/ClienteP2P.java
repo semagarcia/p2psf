@@ -1335,6 +1335,8 @@ public class ClienteP2P extends javax.swing.JFrame {
         boolean encontrado=false;
         int i=0;
         
+System.out.println("actualizarDescarga("+archivo+","+porcentaje+")");
+        
         while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
             if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
             	encontrado=true;
@@ -1374,9 +1376,7 @@ public class ClienteP2P extends javax.swing.JFrame {
  		
  		_modeloListaRecursos.addElement(archivo.info.ruta);
  		
- 		_easTmp.add(archivo);
- 		
- 		almacenarBiblioteca();
+ 		almacenarDescarga(archivo);
  	}
 
     /**

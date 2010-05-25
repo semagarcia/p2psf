@@ -63,6 +63,8 @@ public class Peticion extends Thread {
 	
 	
 	public void run() {
+		int entra=0;
+		
 		byte[] parte;
 				
 		try {
@@ -70,8 +72,10 @@ public class Peticion extends Thread {
 		}
 		catch(Exception e) {
 			parte=null;
-			System.out.println("\n\n\nEXCEPCION CAPTURADA\n\n\n");
+			System.out.println("\n\n\nEXCEPCION CAPTURADA\n"+
+					"["+_pieza.inicio+"-"+_pieza.fin+"]"+"\n\n");
 			e.printStackTrace();
+			entra++;
 		}
 		
 		_downloader.escribir.bajar();
@@ -80,7 +84,7 @@ public class Peticion extends Thread {
 			escribir(parte);
 			anyadirParte();
 			_downloader.addPorcentaje((float)(_pieza.fin-_pieza.inicio)*100/_tam);
-System.out.println("Se ha sumado "+(float)(_pieza.fin-_pieza.inicio)*100/_tam);
+System.out.println("entra="+entra+" ["+_pieza.inicio+"-"+_pieza.fin+"]: "+(float)(_pieza.fin-_pieza.inicio)*100/_tam+"%");
 			_pieza.descargado=true;
 			_pieza.pedido=false;
 			_usuarios.put(_idUsuario, false);

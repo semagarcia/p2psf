@@ -143,6 +143,9 @@ public class MenuContextual extends JFrame {
    			 _descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).start();
    		 } else if(e.getActionCommand().equals(_pausarDescarga)) {
    			 mostrarParado();
+   			 
+System.out.println("DOWNLOADER ESTA VIVO: "+_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).isAlive());
+
    			 _estadoDescargas.put((String)_miTabla.getValueAt(_filaSeleccionada, 1),false);
    			 _descargasActuales.put((String)_miTabla.getValueAt(_filaSeleccionada,1),_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).parar());
    		 } else if(e.getActionCommand().equals(_cancelarDescarga)) {
