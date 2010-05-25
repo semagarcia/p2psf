@@ -179,8 +179,18 @@ public class Downloader extends Thread {
 
 			while(pedir() && !_parar) {
 				esperar.bajar();  //Evita una espera activa. Espera a que finalice el primer hilo peticion lanzado en la iteracion anterior.
-				actualizarUsuarios();
-				lanzarPeticiones();
+
+				try {
+					actualizarUsuarios();
+					lanzarPeticiones();
+					}
+				catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
+					ArrayList<EstrArchivo> array=new ArrayList<EstrArchivo>();
+					array.add(_eas.get(_nombre));
+					_interfaz.cliente.anyadir(array);
+					_arch=_interfaz.cliente.buscar(_nombre);
+					esperar.subir();
+				}
 			}
 			
 			//Espera a que finalicen todos los hilos
@@ -199,11 +209,6 @@ public class Downloader extends Thread {
 				_interfaz.almacenarDescarga(_eas.get(_nombre));
 				accederEas.subir();
 			}
-				
-			
-		}
-		catch (org.omg.CORBA.OBJECT_NOT_EXIST e1) {
-			System.out.println("OBJECT_NOT_EXIST");
 		}
 		catch (Exception e1) {
 			e1.printStackTrace();
@@ -219,6 +224,12 @@ public class Downloader extends Thread {
 		_esperarDownloader.bajar();
 		
 		return copia();
+	}
+	
+	
+	public void matar() {
+		_parar=true;
+		_esperarDownloader.bajar();
 	}
 	
 	private void lanzarPeticiones() {
@@ -276,7 +287,14 @@ public class Downloader extends Thread {
 		_interfaz.sumarConexiones(ruta, i);
 		
 		//Si no se ha lanzado ningún hilo, hay que realizar otra iteracion
-		if(hilos.size()==0) esperar.subir();
+		if(hilos.size()==0) {
+			esperar.subir();
+			try {
+				Thread.sleep(3000);
+			}
+			catch (InterruptedException e) {
+			}
+		}
 	}
 
 

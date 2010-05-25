@@ -22,14 +22,11 @@ public class MenuContextual extends JFrame {
     private JMenuItem _iniciar;
     private JMenuItem _pausar;
     private JMenuItem _cancelar;
-	private JSeparator _separador;
-	private JMenuItem _comprobar;
     private JPopupMenu _menuPopup;
     private MouseListener _listenerPopup;
     private String _iniciarDescarga = "Iniciar descarga";
     private String _pausarDescarga = "Pausar descarga";
     private String _cancelarDescarga = "Cancelar descarga";
-	private String _comprobarDescarga= "Comprobar descarga";
 	private Hashtable<String, Downloader> _descargasActuales;
 	private Hashtable<String, Boolean> _estadoDescargas;
 	private int _filaSeleccionada;
@@ -68,16 +65,6 @@ public class MenuContextual extends JFrame {
 	    _cancelar.addActionListener(new ManejadorEventosMenu(this));
 	    _menuPopup.add(_cancelar);	    
 	    
-	    _separador = new JSeparator();
-	    _menuPopup.add(_separador);	    
-
-	    // Cuarta opcion: comprobar disponibilidad
-	    _comprobar = new JMenuItem(_comprobarDescarga);
-	    _comprobar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/gui/images/cancelar.png")));
-	    _comprobar.addActionListener(new ManejadorEventosMenu(this));
-	    _menuPopup.add(_comprobar);	    
-
-	    
 	    // Para añadir un listener específico a la cabecera	    
 	    //_miTabla.getTableHeader().addMouseListener(_listenerPopup);
 	    
@@ -108,15 +95,9 @@ public class MenuContextual extends JFrame {
    		   	 if(_interfaz.conectado()) {
    				 _filaSeleccionada=_miTabla.rowAtPoint(e.getPoint());
    				 Boolean estado=_estadoDescargas.get(_miTabla.getValueAt(_filaSeleccionada, 1));
-   				 if(estado==null) { // Si es true
-   					 mostrarComprobado();
-   				 }
-   				 else if(estado==true) {
-   					 mostrarIniciado();
-   				 }
-   				 else {
-   					 mostrarParado();   				 
-   				 }
+   				 if(estado==true) mostrarIniciado();
+   				 else mostrarParado();
+   				 
    				 _menuPopup.show(e.getComponent(), e.getX(), e.getY());
    				 // Si se ha pulsado con el botón izquierdo del ratón
    			 	}
@@ -144,12 +125,16 @@ public class MenuContextual extends JFrame {
    		 } else if(e.getActionCommand().equals(_pausarDescarga)) {
    			 mostrarParado();
    			 
-System.out.println("DOWNLOADER ESTA VIVO: "+_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).isAlive());
-
    			 _estadoDescargas.put((String)_miTabla.getValueAt(_filaSeleccionada, 1),false);
    			 _descargasActuales.put((String)_miTabla.getValueAt(_filaSeleccionada,1),_descargasActuales.get(_miTabla.getValueAt(_filaSeleccionada,1)).parar());
    		 } else if(e.getActionCommand().equals(_cancelarDescarga)) {
-   			 System.out.println("Uy, seguro que quieres cancelarla?");
+   			 if(javax.swing.JOptionPane.showConfirmDialog(_interfaz,
+   					 "¿Está seguro de que desa cancelar la descarga?")==javax.swing.JOptionPane.OK_OPTION) {
+   				 String ruta=(String)_miTabla.getValueAt(_filaSeleccionada,1);
+   				 _interfaz.cancelarDescarga(ruta,_filaSeleccionada);
+   				 _estadoDescargas.remove(ruta);
+   			 }
+   				 
    		 }
    	 	}
 
@@ -159,28 +144,16 @@ System.out.println("DOWNLOADER ESTA VIVO: "+_descargasActuales.get(_miTabla.getV
 	public void mostrarDesconectado() {
    	 	_iniciar.setEnabled(false);
 	    _pausar.setEnabled(false);
-	    _comprobar.setEnabled(false);
 	}
 
 	public void mostrarParado() {
    	 	_iniciar.setEnabled(true);
 	    _pausar.setEnabled(false);
-	    _comprobar.setEnabled(false);
 	}
 	
 	public void mostrarIniciado() {
    	 	_iniciar.setEnabled(false);
 	    _pausar.setEnabled(true);
-	    _comprobar.setEnabled(false);
-	}
-
-	private void mostrarComprobado() {
-	 	_iniciar.setEnabled(false);
-	    _pausar.setEnabled(false);
-	    if(_interfaz.conectado())
-	    	_comprobar.setEnabled(true);
-	    else
-	    	_comprobar.setEnabled(false);
 	}
 
 	public void parar(String ruta) {
