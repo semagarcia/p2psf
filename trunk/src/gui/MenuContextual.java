@@ -1,38 +1,25 @@
 package gui;
 
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Hashtable;
 
-import javax.swing.Icon;
+import java.awt.event.*;
+import java.util.Hashtable;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
 import javax.swing.JTable;
-
 import cliente.Downloader;
+
 
 /**
  * Clase que crea el menú Popup (contextual) sobre la tabla de descargas
- * @author sema
  */
 public class MenuContextual extends JFrame {
-    private JTable _miTabla;
-    private JMenuItem _iniciar;
-    private JMenuItem _pausar;
-    private JMenuItem _cancelar;
-    private JPopupMenu _menuPopup;
-    private MouseListener _listenerPopup;
-    private String _iniciarDescarga = "Iniciar descarga";
-    private String _pausarDescarga = "Pausar descarga";
-    private String _cancelarDescarga = "Cancelar descarga";
-	private Hashtable<String, Downloader> _descargasActuales;
-	private Hashtable<String, Boolean> _estadoDescargas;
-	private int _filaSeleccionada;
-	private ClienteP2P _interfaz;
-	 
-  
+	/**
+	 * Clase para mostrar un menú contextual cuando se pulsa con el botón derecho sobre una descarga.
+	 * @param tabla Tabla donde se muestran las descargas.
+	 * @param descargasActuales Nombre y hilos Downloader de las descargas actuales.
+	 * @param interfaz Referencia a la interfaz de usuario.
+	 */
     public MenuContextual(JTable tabla, Hashtable<String, Downloader> descargasActuales, ClienteP2P interfaz) {
     	_interfaz=interfaz;
    	 	_miTabla = tabla; // Referencia a la tabla descargas
@@ -72,17 +59,19 @@ public class MenuContextual extends JFrame {
 	    _descargasActuales=descargasActuales;
     }
     
+
+    /**
+     * Almacena el false en el estado de la nueva descarga.
+     * @param ruta Ruta de la descarga.
+     */
     public void nuevoEstado(String ruta) {
    	// Añadimos un nuevo elemento para la nueva descarga
    	 _estadoDescargas.put(ruta, false); 
     }
     
-    public void quitarEstado(String ruta) {
-   	 //_estadoDescargas.remove();
-    }
-
+    
     /**
-     * Clase interna que bla, bla, bla...
+     * Clase interna que captura los eventos del ratón.
      */
     class ListenerPopup extends MouseAdapter {
    	 public void mousePressed(MouseEvent e) { 
@@ -112,11 +101,12 @@ public class MenuContextual extends JFrame {
    	 }
     } // Fin de la clase ListenerPopup
 
+    
     /**
-     * Methods
-     * @param e
+     * Método que ejecuta la acción seleccionada.
+     * @param e Evento capturado.
      */
-    void realizarAccion(ActionEvent e) {
+    public void realizarAccion(ActionEvent e) {
    		 // Se consulta si la descarga i-ésima está descargando o pausando, para mostrar el menu en función de ello   	 
    		 if(e.getActionCommand().equals(_iniciarDescarga)) {
    			 mostrarIniciado();
@@ -138,32 +128,63 @@ public class MenuContextual extends JFrame {
    		 }
    	 	}
 
+
     /**
-     * 
+     * Actualiza las opciones a mostrar a las que se deben mostrar cuando el usuario esta desconectado.
      */
 	public void mostrarDesconectado() {
    	 	_iniciar.setEnabled(false);
 	    _pausar.setEnabled(false);
 	}
 
+	
+	/**
+     * Actualiza las opciones a mostrar a las que se deben mostrar cuando la descarga está pausada.
+     */
 	public void mostrarParado() {
    	 	_iniciar.setEnabled(true);
 	    _pausar.setEnabled(false);
 	}
 	
+
+	/**
+     * Actualiza las opciones a mostrar a las que se deben mostrar cuando la descarga está activa.
+     */
 	public void mostrarIniciado() {
    	 	_iniciar.setEnabled(false);
 	    _pausar.setEnabled(true);
 	}
 
+
+	/**
+	 * Establece el estado de la descarga a parado(false).
+	 * @param ruta Ruta de la descarga.
+	 */
 	public void parar(String ruta) {
 		_estadoDescargas.put(ruta, false);
 	}
 
+	
+	private JTable _miTabla;
+    private JMenuItem _iniciar;
+    private JMenuItem _pausar;
+    private JMenuItem _cancelar;
+    private JPopupMenu _menuPopup;
+    private MouseListener _listenerPopup;
+    private String _iniciarDescarga = "Iniciar descarga";
+    private String _pausarDescarga = "Pausar descarga";
+    private String _cancelarDescarga = "Cancelar descarga";
+	private Hashtable<String, Downloader> _descargasActuales;
+	private Hashtable<String, Boolean> _estadoDescargas;
+	private int _filaSeleccionada;
+	private ClienteP2P _interfaz;
+	 
+	private static final long serialVersionUID = 1L;
 } // Final de la clase MenuContextual
 
+
 /**
- * Clase que bla, bla... 
+ * Clase que maneja las acciones del ratón. 
  */
 class ManejadorEventosMenu implements ActionListener {
     MenuContextual adaptador;

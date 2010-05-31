@@ -10,7 +10,11 @@ package cliente;
 
 public final class parteArchivo implements org.omg.CORBA.portable.IDLEntity
 {
-  public long inicio = (long)0;
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+public long inicio = (long)0;
   public long fin = (long)0;
   public boolean pedido = false;
   public boolean descargado = false;

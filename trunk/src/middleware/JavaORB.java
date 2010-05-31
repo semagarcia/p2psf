@@ -1,6 +1,6 @@
 /**********************************************************************************
-*  Copyright (C) 2006  Aarón Ruiz Mora              <slown_82@yahoo.es>           *
-*                      Pedro Antonio Gutiérrez Peña <pagutierres@uco.es>          *
+*  Copyright (C) 2006  Aarï¿½n Ruiz Mora              <slown_82@yahoo.es>           *
+*                      Pedro Antonio Gutiï¿½rrez Peï¿½a <pagutierres@uco.es>          *
 *                                                                                 *
 * This program is free software; you can redistribute it and/or                   *
 * modify it under the terms of the GNU General Public License                     *
@@ -35,10 +35,10 @@ import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
 /**
- * Implementación CORBA de la intefaz IMiddleware
+ * Implementaciï¿½n CORBA de la intefaz IMiddleware
  *  
- * @author Pedro Antonio Gutiérrez Peña
- *         Aarón Ruiz Mora
+ * @author Pedro Antonio Gutiï¿½rrez Peï¿½a
+ *         Aarï¿½n Ruiz Mora
  */
 
 public class JavaORB implements IMiddleware {
@@ -47,16 +47,16 @@ public class JavaORB implements IMiddleware {
 	// -------------------------------------------------- Propiedades
 	/////////////////////////////////////////////////////////////////
 
-	/** Opciones de inicialización */
+	/** Opciones de inicializaciï¿½n */
 	public String options[];
 	
-	/** Propiedades de inicialización */
+	/** Propiedades de inicializaciï¿½n */
 	public Properties props = new Properties();
 	
 	/** Adaptador de objetos portable (Portable Object Adaptor) */
 	protected POA poa;
 	
-	/** Agente de petición de objetos (Object Request Broker) */
+	/** Agente de peticiï¿½n de objetos (Object Request Broker) */
 	protected org.omg.CORBA.ORB orb;
 	
 	/** Servidor de nombres */
@@ -81,7 +81,7 @@ public class JavaORB implements IMiddleware {
 			// Obtener la referencia al servicio "RootPOA"
 			poa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			
-			// POA creado con las políticas por defecto:
+			// POA creado con las polï¿½ticas por defecto:
 			// Thread Policy: ORB_CTRL_MODEL
 		    // Lifespan Policy: TRANSIENT
 		    // Object Id Uniqueness Policy: UNIQUE_ID
@@ -100,13 +100,13 @@ public class JavaORB implements IMiddleware {
 			throw new MiddlewareException("JavaORB: Adaptador de objetos inactivo");
 		}		
 		catch (InvalidName e) {
-			throw new MiddlewareException("JavaORB: Nombre de POA inválido");
+			throw new MiddlewareException("JavaORB: Nombre de POA invï¿½lido");
 		}
 		catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		}
 		catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 		catch (MiddlewareException e) {
 			throw e;
@@ -119,7 +119,7 @@ public class JavaORB implements IMiddleware {
 	 */
 	
 	public void detener() throws MiddlewareException{
-		// Para la implementación de CORBA en JAVAORB no es necesario hacer nada
+		// Para la implementaciï¿½n de CORBA en JAVAORB no es necesario hacer nada
 	}
 	
 	/**
@@ -139,17 +139,17 @@ public class JavaORB implements IMiddleware {
 	
 	public void registrar(Object sirviente) throws MiddlewareException{
 		
-		// Hacer un sirviente accesible a través de la red
+		// Hacer un sirviente accesible a travï¿½s de la red
 		try {
 			poa.activate_object((Servant) sirviente);
 		} catch (ServantAlreadyActive e) {
 			throw new MiddlewareException("JavaORB: Sirviente ya activado");
 		} catch (WrongPolicy e) {
-			throw new MiddlewareException("JavaORB: Política de POA no incorrecta");
+			throw new MiddlewareException("JavaORB: Polï¿½tica de POA no incorrecta");
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -166,13 +166,13 @@ public class JavaORB implements IMiddleware {
 		} catch (ObjectNotActive e) {
 			throw new MiddlewareException("JavaORB: Objeto inactivo");
 		} catch (WrongPolicy e) {
-			throw new MiddlewareException("JavaORB: Política de POA no incorrecta");
+			throw new MiddlewareException("JavaORB: Polï¿½tica de POA no incorrecta");
 		} catch (ServantNotActive e) {
 			throw new MiddlewareException("JavaORB: Sirviente inactivo");
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 		
 	}
@@ -189,6 +189,7 @@ public class JavaORB implements IMiddleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public Object interfazSirviente (Class claseSirviente, Object referencia) throws MiddlewareException{
 		
 		try {
@@ -202,7 +203,7 @@ public class JavaORB implements IMiddleware {
 				} catch (ServantNotActive e) {
 					throw new MiddlewareException("JavaORB: Sirviente inactivo");
 				} catch (WrongPolicy e) {
-					throw new MiddlewareException("JavaORB: Política de POA no incorrecta");
+					throw new MiddlewareException("JavaORB: Polï¿½tica de POA no incorrecta");
 				}
 			}
 			else
@@ -211,27 +212,27 @@ public class JavaORB implements IMiddleware {
 			// Obtener la clase Helper
 			Class claseHelper = Class.forName(claseSirviente.getCanonicalName() + "Helper");
 			
-			// Invocar al método narrow
+			// Invocar al mï¿½todo narrow
 			Class[] tipoParametros = {org.omg.CORBA.Object.class};
 			Object[] parametros = {referenciaCORBA};
 			return claseHelper.getDeclaredMethod("narrow", tipoParametros).invoke(null, parametros);
 			
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (ClassNotFoundException e) {
 			throw new MiddlewareException("JavaORB: Clase Helper no encontrada");
 		} catch (SecurityException e) {
 			throw new MiddlewareException("JavaORB: Problema de seguridad");
 		} catch (NoSuchMethodException e) {
-			throw new MiddlewareException("JavaORB: Método narrow(org.omg.CORBA.Object) no encontrado");
+			throw new MiddlewareException("JavaORB: Mï¿½todo narrow(org.omg.CORBA.Object) no encontrado");
 		} catch (IllegalArgumentException e) {
-			throw new MiddlewareException("JavaORB: Argumento incorrecto para el método narrow");
+			throw new MiddlewareException("JavaORB: Argumento incorrecto para el mï¿½todo narrow");
 		} catch (IllegalAccessException e) {
-			throw new MiddlewareException("JavaORB: Acceso ilegal al método narrow");
+			throw new MiddlewareException("JavaORB: Acceso ilegal al mï¿½todo narrow");
 		} catch (InvocationTargetException e) {
-			throw new MiddlewareException("JavaORB: Excepción en la invocación destino");
+			throw new MiddlewareException("JavaORB: Excepciï¿½n en la invocaciï¿½n destino");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -245,32 +246,33 @@ public class JavaORB implements IMiddleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public Object interfazSirviente(Class claseSirviente, String referencia) throws MiddlewareException{
 		try {
 			// Obtener la clase Helpe
 			Class claseHelper = Class.forName(claseSirviente.getCanonicalName() + "Helper");
 
-			// Invocar al método narrow
+			// Invocar al mï¿½todo narrow
 			Class[] tipoParametros = {org.omg.CORBA.Object.class};
 			Object[] parametros = {orb.string_to_object(referencia)};
 			return claseHelper.getDeclaredMethod("narrow", tipoParametros).invoke(null, parametros);
 			
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (ClassNotFoundException e) {
 			throw new MiddlewareException("JavaORB: Clase Helper no encontrada");
 		} catch (SecurityException e) {
 			throw new MiddlewareException("JavaORB: Problema de seguridad");
 		} catch (NoSuchMethodException e) {
-			throw new MiddlewareException("JavaORB: Método narrow(org.omg.CORBA.Object) no encontrado");
+			throw new MiddlewareException("JavaORB: Mï¿½todo narrow(org.omg.CORBA.Object) no encontrado");
 		} catch (IllegalArgumentException e) {
-			throw new MiddlewareException("JavaORB: Argumento incorrecto para el método narrow");
+			throw new MiddlewareException("JavaORB: Argumento incorrecto para el mï¿½todo narrow");
 		} catch (IllegalAccessException e) {
-			throw new MiddlewareException("JavaORB: Acceso ilegal al método narrow");
+			throw new MiddlewareException("JavaORB: Acceso ilegal al mï¿½todo narrow");
 		} catch (InvocationTargetException e) {
-			throw new MiddlewareException("JavaORB: Excepción en la invocación destino");
+			throw new MiddlewareException("JavaORB: Excepciï¿½n en la invocaciï¿½n destino");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 	}
 
@@ -286,13 +288,13 @@ public class JavaORB implements IMiddleware {
 		try {
 			return poa.servant_to_reference((Servant)sirviente);
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (ServantNotActive e) {
 			throw new MiddlewareException("JavaORB: Sirviente inactivo");
 		} catch (WrongPolicy e) {
-			throw new MiddlewareException("JavaORB: Política de POA no incorrecta");
+			throw new MiddlewareException("JavaORB: Polï¿½tica de POA no incorrecta");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 	}
 	
@@ -309,13 +311,13 @@ public class JavaORB implements IMiddleware {
 		try {
 			return orb.object_to_string(poa.servant_to_reference((Servant)sirviente));
 		} catch (COMM_FAILURE e) {
-			throw new MiddlewareException("JavaORB: Fallo de comunicación");
+			throw new MiddlewareException("JavaORB: Fallo de comunicaciï¿½n");
 		} catch (ServantNotActive e) {
 			throw new MiddlewareException("JavaORB: Sirviente inactivo");
 		} catch (WrongPolicy e) {
-			throw new MiddlewareException("JavaORB: Política de POA no incorrecta");
+			throw new MiddlewareException("JavaORB: Polï¿½tica de POA no incorrecta");
 		} catch (SystemException e) {
-			throw new MiddlewareException("JavaORB: Excepción genérica " + e.getLocalizedMessage());
+			throw new MiddlewareException("JavaORB: Excepciï¿½n genï¿½rica " + e.getLocalizedMessage());
 		}
 	}
 	

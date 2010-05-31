@@ -1,45 +1,27 @@
 package gui;
 
+
 import cliente.EstrArchivo;
 import cliente.infoArchivo;
 import cliente.parteArchivo;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-
-import javax.swing.table.DefaultTableModel;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+
 
 /**
  * Clase encargada del parseo y extracción de información desde el fichero
  * XML especificado
- * @author sema
  */
 public class ParserXML {
-    private Document DOM;
-    private EstrArchivo[] eas;
-    private String nombreFichero;
-
-    // Etiquetas del archivo XML
-    private static final String ETIQUETA_ARCHIVO = "archivo";
-    private static final String ETIQUETA_NOMBRE = "nombre";
-    private static final String ETIQUETA_RUTA = "ruta";
-    private static final String ETIQUETA_TAM = "tam";
-    private static final String ETIQUETA_CHECKSUM = "checksum";
-    private static final String ETIQUETA_SEEDS = "seed";
-    private static final String ETIQUETA_PEERS = "peers";
-    private static final String ETIQUETA_PARTE = "parte";
-
     /**
      * Constructor parametrizado. Recibe el nombre del XML a parsear
      * @param nomFich nombre del fichero xml (la biblioteca)
@@ -75,6 +57,7 @@ public class ParserXML {
         }
     }
     
+    
     /**
      * Esta función parsea el archivo XML y extrae los datos de él
      * @param modeloTablaDescargas 
@@ -93,8 +76,9 @@ public class ParserXML {
 
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
-                // Comprobacion para saber que el item i es un nodo
-                if (nl.item(i).getNodeType() == nl.item(i).ELEMENT_NODE) {
+                nl.item(i);
+				// Comprobacion para saber que el item i es un nodo
+                if (nl.item(i).getNodeType() == Node.ELEMENT_NODE) {
                     Element elementoRaiz = (Element) nl.item(i);
 
                     // Obtenemos el valor de la etiqueta <nombre></nombre>
@@ -178,6 +162,7 @@ public class ParserXML {
         return eas;
     }
 
+    
 	/**
 	 * Método que comprueba si existe un archivo el archivo pasado como parámetro
 	 * @param ruta Archivo al que se le va a comprobar su existencia
@@ -187,4 +172,18 @@ public class ParserXML {
 		File f = new File(rutaArchivo);
 		return f.exists();
 	}
+
+
+    private Document DOM;
+    private String nombreFichero;
+
+    // Etiquetas del archivo XML
+    private static final String ETIQUETA_ARCHIVO = "archivo";
+    private static final String ETIQUETA_NOMBRE = "nombre";
+    private static final String ETIQUETA_RUTA = "ruta";
+    private static final String ETIQUETA_TAM = "tam";
+    private static final String ETIQUETA_CHECKSUM = "checksum";
+    private static final String ETIQUETA_SEEDS = "seed";
+    private static final String ETIQUETA_PEERS = "peers";
+    private static final String ETIQUETA_PARTE = "parte";
 }

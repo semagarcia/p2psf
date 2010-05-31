@@ -1,6 +1,6 @@
 /**********************************************************************************
-*  Copyright (C) 2006  Aarón Ruiz Mora              <slown_82@yahoo.es>           *
-*                      Pedro Antonio Gutiérrez Peña <pagutierres@uco.es>          *
+*  Copyright (C) 2006  Aarï¿½n Ruiz Mora              <slown_82@yahoo.es>           *
+*                      Pedro Antonio Gutiï¿½rrez Peï¿½a <pagutierres@uco.es>          *
 *                                                                                 *
 * This program is free software; you can redistribute it and/or                   *
 * modify it under the terms of the GNU General Public License                     *
@@ -20,11 +20,11 @@
 package middleware;
 
 /**
- * Clase estática para proveer acceso al Middleware
+ * Clase estï¿½tica para proveer acceso al Middleware
  * (Singleton)
  *  
- * @author Pedro Antonio Gutiérrez Peña
- *         Aarón Ruiz Mora
+ * @author Pedro Antonio Gutiï¿½rrez Peï¿½a
+ *         Aarï¿½n Ruiz Mora
  */
 
 public abstract class Middleware {
@@ -37,7 +37,7 @@ public abstract class Middleware {
 	private static IMiddleware middleware;
 	
 	/////////////////////////////////////////////////////////////////
-	// --------------------------------------------- Métodos públicos
+	// --------------------------------------------- Mï¿½todos pï¿½blicos
 	/////////////////////////////////////////////////////////////////
 	
 	/**
@@ -101,6 +101,7 @@ public abstract class Middleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public static Object interfazSirviente(Class claseSirviente, Object referencia) throws MiddlewareException{
 		return middleware.interfazSirviente(claseSirviente, referencia);
 	}
@@ -115,6 +116,7 @@ public abstract class Middleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public static Object interfazSirviente(Class claseSirviente, String referencia) throws MiddlewareException{
 		return middleware.interfazSirviente(claseSirviente, referencia);		
 	}

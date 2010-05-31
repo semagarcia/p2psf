@@ -1,25 +1,19 @@
-
 package gui;
+
 
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.JFrame;
 
+
 /**
- * Ventana que muestra la configuración básica de la aplicación
- * @author sema
+ * Ventana que muestra la configuración básica de la aplicación y permite la modificación de las opciones.
  */
 public class Opciones extends javax.swing.JDialog {
-    private int _tam;
-    private int _puerto;
-    private int _nConex;
-    private String _iplocal;
-    private String _ipservidor;
-    private ClienteP2P _interfaz;
-    private String _rutaDescargas;
-    
-    /** Creates new form Help */
+	/**
+	 * Crea la ventana opciones.
+	 */
     public Opciones(JFrame parent, String ipservidor, String iplocal, int puerto, int tam, int nConex, String ruta, ClienteP2P interfaz) {
         super(parent, true); // El true es para hacer modal a la ventana
         
@@ -33,14 +27,14 @@ public class Opciones extends javax.swing.JDialog {
         
         initComponents();
 
-        // Centramos la ventana en la pantalla (Sólo por NetBeans)
+        // Centramos la ventana en la pantalla
         setLocationRelativeTo(null);
     }
 
+    
     /** 
      * Inicialización de otros componentes
      */
-    @SuppressWarnings("unchecked")
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -266,9 +260,10 @@ public class Opciones extends javax.swing.JDialog {
         pack();
     }
 
+
     /**
      * Método que captura los valores introducidos y los devuelve a la interfaz
-     * @param evt
+     * @param evt Evento capturado.
      */
     private void botonAceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonAceptarActionPerformed
     	boolean ok=true;
@@ -327,10 +322,11 @@ public class Opciones extends javax.swing.JDialog {
         }
     }
 
+    
     /**
      * Método que deja los valores intactos, es decir, ignora los cambios
      * introducidos en las cajas de texto
-     * @param evt
+     * @param evt Evento capturado.
      */
     private void botonCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonCancelarActionPerformed
         boolean ok=true;
@@ -350,7 +346,16 @@ public class Opciones extends javax.swing.JDialog {
         	this.setVisible(false);
     }
 
+
     // Variables declaration
+	private int _tam;
+    private int _puerto;
+    private int _nConex;
+    private String _iplocal;
+    private String _ipservidor;
+    private ClienteP2P _interfaz;
+    private String _rutaDescargas;
+    
     private javax.swing.JButton botonAceptar;
     private javax.swing.JButton botonCancelar;
     private javax.swing.JTextField cajaConexMax;
@@ -367,4 +372,6 @@ public class Opciones extends javax.swing.JDialog {
     private javax.swing.JLabel etiquetaTamBloque;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel tituloDialog;
+
+	private static final long serialVersionUID = 1L;
 }

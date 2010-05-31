@@ -10,11 +10,8 @@ import javax.swing.ListCellRenderer;
 /**
  * Esta clase es la encargada de modificar el comportamiento por defecto de los
  * items del objeto JList, donde en lugar de ser sólo texto, es texto+imagen
- * @author sema
  */
 class MiListaRenderer implements ListCellRenderer {
-    protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
-
     public Component getListCellRendererComponent(JList list, Object value, int index,
                                   boolean isSelected, boolean cellHasFocus) {
 
@@ -75,4 +72,6 @@ class MiListaRenderer implements ListCellRenderer {
         else // Y si no reconoce el tipo de archivo, muestra uno en blanco
             return "/gui/extensions/ext_null.png";
   }
+
+    protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 }

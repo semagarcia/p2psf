@@ -1,4 +1,9 @@
 #!/bin/bash
 
-# -ORBInitialPort <Puerto> -ORBInitialHost <IP servidor de nombres> -ORBServerHost <IP local>
-java -jar Servidor/P2PSF_server.jar -ORBInitialPort 2000 -ORBServerHost 192.168.0.11
+echo "Introduzca el puerto de conexión: "
+read _PORT
+
+echo "Introduzca la IP de ésta máquina: "
+read _IP
+
+java -jar Servidor/P2PSF_server.jar -ORBInitialPort $_PORT -ORBServerHost $_IP

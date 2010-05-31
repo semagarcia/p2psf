@@ -10,6 +10,7 @@ package coordinador;
 
 
 // Sirviente que permite a los usuarios conectarse a la red, desconectarse y recuperar informacion sobre los archivos.
+@SuppressWarnings("unchecked")
 public abstract class CoordinadorPOA extends org.omg.PortableServer.Servant
  implements coordinador.CoordinadorOperations, org.omg.CORBA.portable.InvokeHandler
 {

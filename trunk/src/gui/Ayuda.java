@@ -1,12 +1,11 @@
-
 package gui;
+
 
 /**
  * Clase que representa a la ayuda de la aplicación principal
  */
 public class Ayuda extends javax.swing.JDialog {
-
-    /** Creates new form Help */
+	/** Creates new form Help */
     public Ayuda(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
@@ -14,11 +13,29 @@ public class Ayuda extends javax.swing.JDialog {
         // Centramos la ventana en la pantalla (Sólo por NetBeans)
         setLocationRelativeTo(null);
     }
+    
 
+    /**
+    * @param args the command line arguments
+    */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                Ayuda dialog = new Ayuda(new javax.swing.JFrame(), true);
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        System.exit(0);
+                    }
+                });
+                dialog.setVisible(true);
+            }
+        });
+    }
+
+    
     /** 
      * Inicialización de componentes
      */
-    @SuppressWarnings("unchecked")
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -113,6 +130,7 @@ public class Ayuda extends javax.swing.JDialog {
         pack();
     }
 
+    
     /**
      * Método que cierra la ventana al pulsar sobre el botón volver
      * @param evt Evento producido al pulsar sobre el botón
@@ -122,23 +140,7 @@ public class Ayuda extends javax.swing.JDialog {
         this.setVisible(false);
     }
 
-    /**
-    * @param args the command line arguments
-    */
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                Ayuda dialog = new Ayuda(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
-
+    
     // Variables declaration
     private javax.swing.JButton botonVolver;
     private javax.swing.JLabel jLabel1;
@@ -146,4 +148,6 @@ public class Ayuda extends javax.swing.JDialog {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel linea1;
     private javax.swing.JLabel linea2;
+
+    private static final long serialVersionUID = 1L;
 }
