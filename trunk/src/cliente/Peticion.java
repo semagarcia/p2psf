@@ -1,50 +1,32 @@
 package cliente;
 
-import gui.ClienteP2P;
 
+import gui.ClienteP2P;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Hashtable;
-
 import coordinador.Archivo;
-
 import middleware.MiddlewareException;
 
+
+/** Clase encargada de realizar una petición de una pieza de un archivo a un usuario. */
 public class Peticion extends Thread {
-		
-	private Usuario _usuario;
-	private String _nombre;
-	private parteArchivo _pieza;
-	private Downloader _downloader;
-	private Hashtable<String, EstrArchivo> _eas;
-	private Hashtable<Integer, Boolean> _usuarios;
-	private int _miId;
-	private long _tam;
-	private long _checksum;
-	private Archivo _arch;
-	private int _idUsuario;
-	private ClienteP2P _interfaz;
 
-	
 	/**
-	 * Escribe los bytes en el fichero destino comenzando por el byte inicio de dicho fichero 
+	 * Constructor de la clase. Crea un hilo encargado de pedir una pieza a un usuario.
+	 * @param usu Referencia en CORBA del usuario al cual realizar la petición.
+	 * @param pieza Pieza a solicitar al usuario.
+	 * @param downloader Referencia al hilo downloader encargado de la descarga del archivo del cual
+	 * solicitar la pieza.
+	 * @param usuarios Información sobre a que usuarios se les ha solicitado alguna parte y a cuales no. 
+	 * @param idUsuario Identificador del usuario al cual se le realiza la petición.
+	 * @param miId Identificador del usuario que realiza la descarga.
+	 * @param eas Información local de los archivos.
+	 * @param arch Referencia al archivo en CORBA.
+	 * @param interfaz Referencia a la interfaz de usuario.
+	 * @throws MiddlewareException CORBA lanzará una excepción si el archivo o el usuario no existe.
 	 */
-	public void escribir(byte[] datos) {
-		File destino=new File(_downloader.ruta);
-		RandomAccessFile fileOut;
-		try {
-			fileOut = new RandomAccessFile(destino,"rw");
-			fileOut.seek(_pieza.inicio);
-			fileOut.write(datos);		
-			fileOut.close();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	
 	public Peticion(Usuario usu, parteArchivo pieza, Downloader downloader, Hashtable<Integer, Boolean> usuarios,
 			int idUsuario, int miId, Hashtable<String, EstrArchivo> eas, Archivo arch, ClienteP2P interfaz) throws MiddlewareException {
 		_downloader=downloader;
@@ -61,7 +43,11 @@ public class Peticion extends Thread {
 		_interfaz=interfaz;
 	}
 	
-	
+
+	/**
+	 * Comienza la ejecuación del hilo. Realiza la petición al usuario, almacena los datos recibidos
+	 * y actualiza la información de la descarga.
+	 */
 	public void run() {
 		byte[] parte;
 				
@@ -70,8 +56,6 @@ public class Peticion extends Thread {
 		}
 		catch(Exception e) {
 			parte=null;
-			System.out.println("\n\n\nEXCEPCION CAPTURADA\n"+
-					"["+_pieza.inicio+"-"+_pieza.fin+"]"+"\n\n");
 		}
 		
 		_downloader.escribir.bajar();
@@ -100,6 +84,28 @@ public class Peticion extends Thread {
 	}
 
 	
+	/**
+	 * Escribe los bytes en el fichero destino comenzando por el byte inicio de dicho fichero.
+	 */
+	public void escribir(byte[] datos) {
+		File destino=new File(_downloader.ruta);
+		RandomAccessFile fileOut;
+		try {
+			fileOut = new RandomAccessFile(destino,"rw");
+			fileOut.seek(_pieza.inicio);
+			fileOut.write(datos);		
+			fileOut.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	/**
+	 * Añade la pieza descargada a la información local de los archivos. Así mismo, también actualiza las partes
+	 * que el usuario contiene del archivo mediante la referencia CORBA del objeto Archivo en cuestión.
+	 */
 	private void anyadirParte() {
 		int i=0, j;
 		
@@ -185,10 +191,41 @@ public class Peticion extends Thread {
 		_downloader.accederEas.subir();
 	}
 
-
-	private void mostrarPartes(parteArchivo[] partes) {
-		System.out.println("Partes completadas: ");
-		for(int i=0;i<partes.length;i++)
-			System.out.println(i+"["+partes[i].inicio+"-"+partes[i].fin+"]");		
-	}
+	
+	
+	/** Referencia CORBA del usuario al cual se le realiza la petición. */
+	private Usuario _usuario;
+	
+	/** Nombre del archivo a descargar. */
+	private String _nombre;
+	
+	/** Pieza a descargar. */
+	private parteArchivo _pieza;
+	
+	/** Referencia al hilo Downloader encargado de la descarga. */
+	private Downloader _downloader;
+	
+	/** Información local de los archivos. */
+	private Hashtable<String, EstrArchivo> _eas;
+	
+	/** Información sobre a que usuarios se les ha solicitado alguna parte y a cuales no. */
+	private Hashtable<Integer, Boolean> _usuarios;
+	
+	/** Identificador del usuario que realiza la petición. */
+	private int _miId;
+	
+	/** Tamaño del fichero que se está descargando. */
+	private long _tam;
+	
+	/** Checksum del fichero que se está descargando. */
+	private long _checksum;
+	
+	/** Referencia CORBA del archivo que se está descargando. */
+	private Archivo _arch;
+	
+	/** Identificador del usuario al cual realizar la petición. */
+	private int _idUsuario;
+	
+	/** Referencia a la interfaz de usuario. */
+	private ClienteP2P _interfaz;
 }

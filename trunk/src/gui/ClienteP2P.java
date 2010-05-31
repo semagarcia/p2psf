@@ -55,6 +55,7 @@ public class ClienteP2P extends javax.swing.JFrame {
     private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
     public UsuarioClient cliente;
     private ArrayList<EstrArchivo> _easTmp;
+
     
     /** Constructor del ClienteP2P */
     public ClienteP2P() {
@@ -112,6 +113,61 @@ public class ClienteP2P extends javax.swing.JFrame {
         // de ficheros/recursos compartidos
         cargarBiblioteca();
     }
+    
+    
+	public void almacenarDescarga(EstrArchivo estrArchivo) {
+		boolean encontrado=false;
+		int i=0;
+		while(!encontrado && i<_easTmp.size()) {
+			if(_easTmp.get(i).info.ruta.equals(estrArchivo.info.ruta)) {
+				encontrado=true;
+				_easTmp.remove(i);
+			}
+			else i++;
+		}
+		_easTmp.add(estrArchivo);
+		almacenarBiblioteca();
+	}
+
+	public synchronized void sumarConexiones(String ruta, int num) {
+		boolean encontrado=false;
+		int i=0;
+		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+			if(_modeloTablaDescargas.getValueAt(i, 1).equals(ruta))
+				encontrado=true;
+			else
+				i++;
+		}
+
+		int conex;
+		if(encontrado) {
+			conex=(Integer)_modeloTablaDescargas.getValueAt(i, 3)+num;
+			_modeloTablaDescargas.setValueAt(conex, i, 3);
+		}
+	}
+
+	public void cancelarDescarga(String ruta, int fila) { 		 		
+ 		boolean encontrado=false;
+ 		int i=0;
+ 		EstrArchivo e=null;
+ 		
+ 		_descargasActuales.remove(ruta).matar();
+ 		eliminarDescarga(fila);
+ 		
+ 		while(!encontrado && i<_easTmp.size()) {
+ 			if(_easTmp.get(i).info.ruta.equals(ruta)) { 				
+ 				e=_easTmp.remove(i);
+ 				encontrado=true;
+ 				}
+ 			else i++;
+ 			}
+ 		
+ 		cliente.eliminar(new EstrArchivo[] {e});
+ 		
+ 		almacenarBiblioteca();
+ 		}
+
+    
     
     /**
      * Meétodo que limpia la tabla de los resultados de la búsqueda
@@ -787,7 +843,8 @@ public class ClienteP2P extends javax.swing.JFrame {
     						sum+=e.partes[i].fin-e.partes[i].inicio;
     					}
     					float porcentaje=sum*100/e.info.tam;
-    					d=cliente.descargar(a, e.partes, porcentaje, _conexionesMaximas, _tamBloque, e.info.ruta, _descargasPendientes.remove(e));
+    					_descargasPendientes.remove(e);
+    					d=cliente.descargar(a, e.partes, porcentaje, _conexionesMaximas, _tamBloque, e.info.ruta);
     					_descargasActuales.put(e.info.ruta, d);
     				}
     			}
@@ -1196,7 +1253,7 @@ public class ClienteP2P extends javax.swing.JFrame {
    		JProgressBar barra = crearBarraDescarga(p, String.valueOf((int)p)+"%");
    		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra, 0});
 		_menuContextual.nuevoEstado(ruta);
-   		d=cliente.descargar(a, partes, p, _conexionesMaximas, _tamBloque, ruta, barra);
+   		d=cliente.descargar(a, partes, p, _conexionesMaximas, _tamBloque, ruta);
 		_descargasActuales.put(ruta, d);
     }
     
@@ -1212,7 +1269,7 @@ public class ClienteP2P extends javax.swing.JFrame {
 		if(conectado())
 			a=cliente.buscar(e.info.nombre);
 		if(a!=null) {
-			d=cliente.descargar(a, e.partes, p, _conexionesMaximas, _tamBloque, ruta, barra);
+			d=cliente.descargar(a, e.partes, p, _conexionesMaximas, _tamBloque, ruta);
 			_descargasActuales.put(ruta, d);
 		}
 		else
@@ -1335,8 +1392,6 @@ public class ClienteP2P extends javax.swing.JFrame {
         boolean encontrado=false;
         int i=0;
         
-System.out.println("actualizarDescarga("+archivo+","+porcentaje+")");
-        
         while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
             if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
             	encontrado=true;
@@ -1436,57 +1491,4 @@ System.out.println("actualizarDescarga("+archivo+","+porcentaje+")");
     private javax.swing.JToolBar.Separator separador1;
     private javax.swing.JPopupMenu.Separator separadorArchivo;
     private javax.swing.JLabel valorEstadoActual;
-    // End of variables declaration//GEN-END:variables
-
-	public void almacenarDescarga(EstrArchivo estrArchivo) {
-		boolean encontrado=false;
-		int i=0;
-		while(!encontrado && i<_easTmp.size()) {
-			if(_easTmp.get(i).info.ruta.equals(estrArchivo.info.ruta)) {
-				encontrado=true;
-				_easTmp.remove(i);
-			}
-			else i++;
-		}
-		_easTmp.add(estrArchivo);
-		almacenarBiblioteca();
-	}
-
-	public synchronized void sumarConexiones(String ruta, int num) {
-		boolean encontrado=false;
-		int i=0;
-		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
-			if(_modeloTablaDescargas.getValueAt(i, 1).equals(ruta))
-				encontrado=true;
-			else
-				i++;
-		}
-
-		int conex;
-		if(encontrado) {
-			conex=(Integer)_modeloTablaDescargas.getValueAt(i, 3)+num;
-			_modeloTablaDescargas.setValueAt(conex, i, 3);
-		}
-	}
-
-	public void cancelarDescarga(String ruta, int fila) { 		 		
- 		boolean encontrado=false;
- 		int i=0;
- 		EstrArchivo e=null;
- 		
- 		_descargasActuales.remove(ruta).matar();
- 		eliminarDescarga(fila);
- 		
- 		while(!encontrado && i<_easTmp.size()) {
- 			if(_easTmp.get(i).info.ruta.equals(ruta)) { 				
- 				e=_easTmp.remove(i);
- 				encontrado=true;
- 				}
- 			else i++;
- 			}
- 		
- 		cliente.eliminar(new EstrArchivo[] {e});
- 		
- 		almacenarBiblioteca();
- 		}
 }

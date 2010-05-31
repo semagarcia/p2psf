@@ -1,44 +1,30 @@
 package cliente;
 
-import gui.ClienteP2P;
 
+import gui.ClienteP2P;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-
-import javax.swing.JProgressBar;
-
 import middleware.JavaORB;
 import middleware.Middleware;
 import middleware.MiddlewareException;
 import coordinador.Archivo;
 import coordinador.Coordinador;
 
+
+/** Clase que contiene los métodos necesarios para comunicarse con el coordinador. */
 public class UsuarioClient {
-	// Referencia al coordinador
-	private Coordinador _coord;
-	
-	// Identificador del usuario
-	private int _id;
-	
-	// Tabla de ficheros del usuario
-	private Hashtable<String, EstrArchivo> _eas;
-	
-	// Referencia al hilo de escucha del usuario
-	private UsuarioServer _hiloServer;
-		
-	//Semáforo para escribir en la tabla _eas (información local de los archivos)
-	private Semaforo _accederEas;
-
-	private String _ipservidor;
-
-	private int _puerto;
-
-	private String _iplocal;
-
-	private ClienteP2P _interfaz;
-
-	
+	/**
+	 * Constructor de la clase. Crea una instancia de la clase con los datos necesarios para 
+	 * comunicarse con el servidor y crear un hilo servidor que escuchará peticiones de otros
+	 * usuarios.
+	 * @param ipservidor IP en la cual se encuentra el servidor de nombres.
+	 * @param iplocal IP de la máquina local.
+	 * @param puerto Puerto a través del cual se establecerán las comunicaciones.
+	 * @param interfaz Referencia a la interfaz del usuario.
+	 * @throws MiddlewareException CORBA puede lanzar una excepción si algún objeto sobre el
+	 * cual se hace referencia no existe.
+	 */
 	public UsuarioClient(String ipservidor, String iplocal, int puerto, ClienteP2P interfaz) throws MiddlewareException {
 		_coord=null;
 		_id=-1;
@@ -62,6 +48,10 @@ public class UsuarioClient {
 	}
 	
 	
+	/**
+	 * Añade archivos localmente y en la red para su compartición.
+	 * @param eas Estructura de archivos a añadir.
+	 */
 	public void anyadir(ArrayList<EstrArchivo> eas) {
 		ArrayList<EstrArchivo> aux=new ArrayList<EstrArchivo>();
 		
@@ -84,7 +74,12 @@ public class UsuarioClient {
 		_accederEas.subir();
 	}
 	
-	
+
+	/**
+	 * Elimina archivos localmente y en la red. No elimina los archivos físicos, sólo la
+	 * información que la aplicación mantiene de los mismos.
+	 * @param eas Estructura de archivos a eliminar.
+	 */
 	public void eliminar(EstrArchivo[] eas) {
 		
 		_accederEas.bajar();
@@ -99,7 +94,11 @@ public class UsuarioClient {
 		_accederEas.subir();
 	}
 	
-	
+
+	/**
+	 * Conecta al usuario en la red y envía los archivos que éste comparte.
+	 * @return true en caso de haberse conectado correctamente, false en caso contrario.
+	 */
 	@SuppressWarnings("deprecation")
 	public boolean conectar() {
 		boolean conectado=(_id!=-1);
@@ -130,7 +129,12 @@ public class UsuarioClient {
 		return conectado;
 	}
 	
-	
+
+	/**
+	 * Busca un archivo en la red.
+	 * @param nombre Nombre del archivo a buscar.
+	 * @return La referencia CORBA del archivo encontrado, null en caso de no encontrarlo.
+	 */
 	public Archivo buscar(String nombre) {
 		Archivo aux=null;
 		
@@ -140,7 +144,11 @@ public class UsuarioClient {
 		return aux;
 	}
 
-	
+
+	/**
+	 * Desconecta al usuario de la red.
+	 * @return true en caso de haberse desconectado correctamente, false en caso contrario.
+	 */
 	@SuppressWarnings("deprecation")
 	public boolean desconectar() {
 		boolean desconectado=(_id==-1);
@@ -163,7 +171,18 @@ public class UsuarioClient {
 		return desconectado;
 	}
 
-	public Downloader descargar(Archivo arch, parteArchivo[] partes, float porcentaje, int numConex, long tamPieza, String ruta, JProgressBar barra) {
+	
+	/**
+	 * Crea un hilo Downloader para que gestione la descarga de un fichero.
+	 * @param arch Referencia en CORBA del archivo a descargar.
+	 * @param partes Partes del archivo que el usuario ya posee.
+	 * @param porcentaje Porcentaje de la descarga que el usuario ya tiene realizado.
+	 * @param numConex Número de conexiones máximas por archivo que el usuario puede establecer.
+	 * @param tamPieza Tamaño máximo de las piezas a descargar.
+	 * @param ruta Ruta donde se almacena el fichero.
+	 * @return Hilo Downloader encargado de realizar la descarga.
+	 */
+	public Downloader descargar(Archivo arch, parteArchivo[] partes, float porcentaje, int numConex, long tamPieza, String ruta) {
 		//lanza el hilo de descarga para el archivo
 		Downloader d=null;
 		
@@ -174,7 +193,39 @@ public class UsuarioClient {
 	}
 
 
+	/**
+	 * Devuelve el id del usuario en la red.
+	 * @return El identificador del usuario en la red o -1 si no está conectado.
+	 */
 	public int getId() {
 		return _id;
 	}
+	
+
+	/** Referencia al coordinador. */
+	private Coordinador _coord;
+	
+	/** Identificador del usuario. */
+	private int _id;
+	
+	/** Tabla de ficheros del usuario. */
+	private Hashtable<String, EstrArchivo> _eas;
+	
+	/** Referencia al hilo de escucha del usuario. */
+	private UsuarioServer _hiloServer;
+		
+	/** Semáforo para escribir en la tabla _eas (información local de los archivos). */
+	private Semaforo _accederEas;
+
+	/** IP en la cual se encuentra el servidor de nombres. */
+	private String _ipservidor;
+
+	/** Puerto a través del cual se establecen las conexiones. */
+	private int _puerto;
+
+	/** IP de la máquina local. */
+	private String _iplocal;
+
+	/** Referencia a la interfaz de usuario. */
+	private ClienteP2P _interfaz;
 }
