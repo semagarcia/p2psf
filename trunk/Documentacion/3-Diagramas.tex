@@ -1,0 +1,59 @@
+\chapter{Diagramas de modelado}
+A continuaciÃ³n se exponen los diagramas de paquetes, de clases y uno adicional donde se detallan aspectos concretos de la aplicaciÃ³n.\\
+
+   \section{Diagrama de paquetes}
+   En el diagrama de paquetes que se muestra en la figura \ref{diagramaPaquetes} podemos observar que el mÃ³dulo ``GUI'', que contiene todo el
+   cÃ³digo fuente relativo a la interfaz grÃ¡fica, sÃ³lo interactÃºa con el mÃ³dulo cliente, que se considera el nÃºcleo de la aplicaciÃ³n en la parte
+   cliente.\\
+
+  \begin{figure} [H] \begin{center}
+    \includegraphics[width=0.82\textwidth]{./imagenes/3-DiagPaquetes}
+    \caption{Diagrama de paquetes} \label{diagramaPaquetes}
+  \end{center} \end{figure}
+
+
+   \section{Diagrama de clases}
+   A continuaciÃ³n se exponen los diagramas de clases de cada uno de los mÃ³dulos identificados anteriormente.\\
+  \begin{figure} [H] \begin{center}
+    \includegraphics[width=0.82\textwidth]{./imagenes/3-DiagClases-Coordinador}
+    \caption{Diagrama de clases - Coordinador} \label{DCcoord}
+  \end{center} \end{figure}
+
+  \begin{figure} [H] \begin{center}
+    \includegraphics[width=0.82\textwidth]{./imagenes/3-DiagClases-Cliente}
+    \caption{Diagrama de clases - Cliente} \label{DCclient}
+  \end{center} \end{figure}
+
+  \begin{figure} [H] \begin{center}
+    \includegraphics[width=0.82\textwidth]{./imagenes/3-DiagClases-GUI}
+    \caption{Diagrama de clases - GUI} \label{DCGUI}
+  \end{center} \end{figure}
+
+   \section{Diagrama de la estructura del cliente}
+   Para finalizar este capÃ­tulo se expone a continuaciÃ³n el diagrama que muestra cÃ³mo estÃ¡ estructurado el cliente, es decir, de quÃ©
+   clases hace uso para un mejor entendimiento del funcionamiento de la aplicaciÃ³n cliente.\\
+  \begin{figure} [H] \begin{center}
+    \includegraphics[width=0.82\textwidth]{./imagenes/3-DiagramaEstructuraUsuario}
+    \caption{Cliente - EstructuraciÃ³n interna} \label{DEU}
+  \end{center} \end{figure}
+   Como se puede ver, el \textit{UsuarioClient} utiliza un objeto \textit{UsuarioServer} que a su vez utiliza un objeto de la clase 
+   \textit{UsuarioImpl}. Esta interacciÃ³n es la que implementa la parte cliente y servidora de cada usuario. \textit{UsuarioClient} es la parte
+  cliente, mientras que \textit{UsuarioServer} es la parte servidora que contiene un sirviente \textit{UsuarioImpl}.\\
+
+   Por otro lado, en cuanto a las descargas, la clase \textit{UsuarioClient} puede instanciar cero o mÃ¡s objetos de la clase \textit{Downloader}.
+   El objeto Downloader es el encargado de gestionar cada una de las descargas que se estÃ©n realizando. A su vez, Ã©ste objeto puede instanciar
+   tantos objetos \textit{Peticion} como sea necesario. Â¿QuiÃ©n determinarÃ¡ el nÃºmero de instancias? Dos elementos:
+   \begin{itemize}
+    \item El nÃºmero de conexiones mÃ¡ximas: como mÃ¡ximo habrÃ¡ \textit{numConex} objetos instanciados en un mismo instante.
+    \item El nÃºmero de usuarios a los que pedir partes (peers en primer lugar y seeds en segundo lugar). Si no hay ningÃºn usuario que posea una parte
+          que el cliente solicita, no existirÃ¡ ningÃºn objeto PeticiÃ³n.\\
+   \end{itemize}
+
+   Este objeto PeticiÃ³n serÃ¡ el que, en funciÃ³n de la parte que determine el algoritmo del objeto Downloader, pida una porciÃ³n del fichero, desde un
+   inicio hasta un fin, en bloques de un tamaÃ±o preasignado, pero configurable\footnote{Este parÃ¡metro es delicado, pues un tiempo alto puede provocar,
+   cuando la red se encuentre sobrecargada, fallos de tiempo de expiraciÃ³n (timeout) y serÃ¡ necesario el reenvÃ­o de los bloques, lo que repercutirÃ¡ en
+   el aprovechamiento de la comunicaciÃ³n}.\\
+
+   Por Ãºltimo, destacar que los objetos Downloader y PeticiÃ³n son hilos, pues extienden de la clase Thread. AsÃ­ de esta forma podemos crear descargas
+   que se realicen de manera concurrente y no sobrecargamos el sistema.
+

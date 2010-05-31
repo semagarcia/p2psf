@@ -1,0 +1,202 @@
+\chapter{Interfaces IDL}
+A continuaciÃ³n se expone el cÃ³digo correspondiente a la interfaz IDL desarrollada, para posteriormente pasar a su descripciÃ³n.\\
+
+\begin{verbatim}
+/**
+* Modulo cliente. Se desarrolla todo el codigo necesario para la comunicación
+* entre los usuarios y el almacenamiento del estado de los ficheros localmente.
+*/
+module cliente {
+
+	// Estructura para almacenar la informacion de los archivos.
+	struct infoArchivo {
+		string ruta;
+		string nombre;
+		long long tam;
+		long long checksum;
+	};
+
+	// Estructura para almacenar las partes de un archivo que el usuario posee o desea descargar.
+	struct parteArchivo {
+		long long inicio;
+		long long fin;
+		boolean pedido;
+		boolean descargado;
+	};
+
+	typedef sequence <parteArchivo> vPartes;
+
+	// Estructura para que los usuarios envíen la información de sus archivos al coordinador.
+	struct EstrArchivo {
+		infoArchivo info;
+		vPartes partes;
+	};
+
+	// Definicion de array de EstrArchivos.
+	typedef sequence <EstrArchivo> estrArchivos;
+
+	// Secuencia de bytes que los usuarios devolveran como respuesta a las peticiones de archivos.
+	typedef sequence <octet> vByte;
+
+	// Sirviente que proporciona partes de un archivo a los usuarios que se la solicitan.
+	interface Usuario {
+		// Método que devuelve la parte solicitada de un archivo.
+		vByte solicitarParte(in string nombre, in long long inicio, in long long fin);
+	};
+};
+
+
+/*
+* Modulo coordinador. Contiene el codigo necesario para almacenar el estado de los archivos en la red y
+* facilita a los clientes la informacion de dichos archivos para posibilitar su descarga de otros usuarios.
+*/
+module coordinador {
+	//Definición de array de int.
+	typedef sequence <long> vInt;
+	
+	// Creado por el coordinador. Mantiene información de los archivos de la red.
+	interface Archivo {
+		readonly attribute string nombre;
+		readonly attribute long long tam;
+		readonly attribute long long checksum;
+
+		void insertarSeed(in long id);
+		void insertarPeer(in long id, in cliente::vPartes partes);
+		void actualizarPartes(in long id, in cliente::vPartes partes);
+		void eliminarSeed(in long id);
+		void eliminarPeer(in long id);
+		vInt getSeeds();
+		vInt getPeers();
+		cliente::vPartes getPartes(in long id); // Devuelve las partes que posee el usuario con identificador id
+	};
+
+	// Sirviente que permite a los usuarios conectarse a la red, desconectarse y recuperar informacion sobre los archivos.
+	interface Coordinador{
+		long conectar(in cliente::estrArchivos eas, in cliente::Usuario usuario);
+		void desconectar(in cliente::estrArchivos eas, in long idUsuario);
+		void anyadirArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		void eliminarArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		Archivo buscar(in string nombre);
+		cliente::Usuario getUsuario(in long id);
+	};
+};
+\end{verbatim}
+
+
+   % ExplicaciÃ³n de la interfaz IDL
+   \section{MÃ³dulo \textit{cliente}}
+   Comenzaremos describiendo la interfaz IDL por el mÃ³dulo cliente, que es el que realiza las peticiones inicialmente al servidor o cuando desea buscar un
+   fichero en la red.\\      
+
+      \subsection{Estructura infoArchivo}
+      \begin{center}
+         \begin{verbatim}
+	struct infoArchivo {
+		string ruta;
+		string nombre;
+		long long tam;
+		long long checksum;
+	};
+         \end{verbatim}
+      \end{center}
+      Esta estructura permite mantener, por cada archivo que se estÃ¡ compartiendo, informaciÃ³n relativa al ``sistema de archivos''; es decir, nos
+      va a almacenar atributos como el nombre y ruta completa del archivo, longitud y suma de verificaciÃ³n (checksum).\\ 
+      De esta forma encapsulamos en esta estructura todo lo relativo al fichero fÃ­sico en la mÃ¡quina del cliente.\\
+
+      \subsection{Estructura parteArchivo}
+      \begin{center}
+         \begin{verbatim}
+	struct parteArchivo {
+		long long inicio;
+		long long fin;
+		boolean pedido;
+		boolean descargado;
+	};
+         \end{verbatim}
+      \end{center}
+      La siguiente estructura que posee el mÃ³dulo cliente es la que va a permitir almacenar informaciÃ³n relativa a las descargas, es decir, aquella
+      que nos indica las partes que tiene el cliente, o si Ã©ste estÃ¡ lanzando peticiones para solicitar nuevas partes.\\
+
+      AsÃ­ es fÃ¡cil mantener, para todos los archivos, las partes que se poseen con el fin de optimizar al mÃ¡ximo la utilizaciÃ³n de la red P2P de 
+      manera que se pueden ir solicitando partes que ya posean otros usuarios o se puede pausar una descarga (cerrando incluso la aplicaciÃ³n) para
+      posteriormente, al volverla a abrir, mantener la consistencia suficiente sobre el archivo de manera que no se pierda informaciÃ³n.\\
+
+      \subsection{Estructura EstrArchivo}
+      \begin{center}
+         \begin{verbatim}
+	struct EstrArchivo {
+		infoArchivo info;
+		vPartes partes;
+	};
+         \end{verbatim}
+      \end{center}      
+      Esta estructura, como se puede deducir del fragmento de cÃ³digo, es la ``uniÃ³n'' de las dos estructuras vistas anteriormente, de manera que
+      volvemos a utilizar el concepto encapsulamiento y en un solo objeto mantenemos toda la informaciÃ³n necesaria sobre el archivo: nombre fÃ­sico,
+      ruta completa, tamaÃ±o, si es un seed o un peer, quÃ© partes posee en caso de estar incompleto... Esta será la información que los usuarios 
+      proporcionarán al coordinador.\\
+
+      \subsection{Interfaz Usuario}
+      \begin{center}
+         \begin{verbatim}
+	interface Usuario {
+		// Método que devuelve la parte solicitada de un archivo.
+		vByte solicitarParte(in string nombre, in long long inicio, in long long fin);
+	};
+         \end{verbatim}
+      \end{center}  
+      La interfaz y Ãºltimo elemento que comentaremos sobre el mÃ³dulo cliente es \textit{Usuario}. Esta interfaz posee un mÃ©todo llamado 
+      \textit{solicitarParte}, la cual devuelve un array de bytes. Ãste solicita, a partir de un nombre de fichero, el fragmento comprendido entre
+      las posiciones \textit{inicio} y \textit{fin}, devolviendo el vector \textit{[inicio, fin]}.\\
+
+
+   \section{MÃ³dulo \textit{coordinador}}
+   Ahora nos movemos al otro extremo de la comunicaciÃ³n\footnote{Recordemos que nos estamos refiriendo a una red P2P hÃ­brida o semi-descentralizada.}
+   donde se encuentra el servidor de la red.\\
+
+      \subsection{Interfaz Archivo}
+      \begin{center}
+         \begin{verbatim}
+	interface Archivo {
+		readonly attribute string nombre;
+		readonly attribute long long tam;
+		readonly attribute long long checksum;
+
+		void insertarSeed(in long id);
+		void insertarPeer(in long id, in cliente::vPartes partes);
+		void actualizarPartes(in long id, in cliente::vPartes partes);
+		void eliminarSeed(in long id);
+		void eliminarPeer(in long id);
+		vInt getSeeds();
+		vInt getPeers();
+		cliente::vPartes getPartes(in long id); // Devuelve las partes que posee el usuario con identificador id
+	};
+         \end{verbatim}
+      \end{center} 
+      La interfaz Archivo es la encargada de lo relacionado con las descargas de cada archivo, es decir, de aÃ±adir y quitar seeds, de aÃ±adir, quitar
+      y actualizar peers, asÃ­ como comprobar los seeds y peers que hay de un determinado archivo.\\
+
+      \subsection{Interfaz Coordinador}
+      \begin{center}
+         \begin{verbatim}
+	interface Coordinador{
+		long conectar(in cliente::estrArchivos eas, in cliente::Usuario usuario);
+		void desconectar(in cliente::estrArchivos eas, in long idUsuario);
+		void anyadirArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		void eliminarArchivos(in cliente::estrArchivos eas, in long idUsuario);
+		Archivo buscar(in string nombre);
+		cliente::Usuario getUsuario(in long id);
+	};
+         \end{verbatim}
+      \end{center} 
+      La Ãºltima interfaz que abordamos es la del Coordinador, a través de la cual se podrán realizar las siguientes funciones:
+      \begin{itemize}
+         \item Registrar a un nuevo usuario en la red, asignÃ¡ndole un nuevo identificador interno. Este registro se lleva a cabo mediante el par de
+               valores \textit{(identificador, referenciaCORBA)}. Lo mismo con el proceso inverso para la desconexiÃ³n.
+         \item Compartir y aÃ±adir nuevos ficheros a la red P2PSF, es decir, registrar y publicar que hay mÃ¡s ficheros compartidos. AnÃ¡logo cuando un
+               usuario se desconecta y deja de compartir sus recursos.
+         \item Realizar bÃºsquedas en la red P2PSF a peticiÃ³n de un usuario para descargar algÃºn archivo.
+         \item Obtener la referencia CORBA (interfaz Usuario) de un cliente de la red para solicitarle una o mÃ¡s partes de un archivo deseado.
+      \end{itemize}
+
+
+

@@ -1,22 +1,23 @@
 /**
-* Parte cliente, serían los N usuarios que interactuarán, en el inicio de la
-* conexión, con la parte servidora (concretamente, con el Coordinador).
+* Modulo cliente. Se desarrolla todo el codigo necesario para la comunicación
+* entre los usuarios y el almacenamiento del estado de los ficheros localmente.
 */
 module cliente {
-	//typedef sequence <long long> vLong;
 
+	// Estructura para almacenar la informacion de los archivos.
 	struct infoArchivo {
-		string ruta;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
+		string ruta;
 		string nombre;
 		long long tam;
 		long long checksum;
 	};
 
+	// Estructura para almacenar las partes de un archivo que el usuario posee o desea descargar.
 	struct parteArchivo {
 		long long inicio;
 		long long fin;
-		boolean pedido;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
-		boolean descargado;  // SE PUEDE QUITAR DE AQUÍ E IMPLEMENTARLO EN EL INTERIOR UNA VEZ GENERADO EL CODIGO
+		boolean pedido;
+		boolean descargado;
 	};
 
 	typedef sequence <parteArchivo> vPartes;
@@ -27,19 +28,26 @@ module cliente {
 		vPartes partes;
 	};
 
-
-	// Secuencia de archivos
+	// Definicion de array de EstrArchivos.
 	typedef sequence <EstrArchivo> estrArchivos;
 
+	// Secuencia de bytes que los usuarios devolveran como respuesta a las peticiones de archivos.
 	typedef sequence <octet> vByte;
 
+	// Sirviente que proporciona partes de un archivo a los usuarios que se la solicitan.
 	interface Usuario {
+		// Método que devuelve la parte solicitada de un archivo.
 		vByte solicitarParte(in string nombre, in long long inicio, in long long fin);
 	};
 };
 
+
+/*
+* Modulo coordinador. Contiene el codigo necesario para almacenar el estado de los archivos en la red y
+* facilita a los clientes la informacion de dichos archivos para posibilitar su descarga de otros usuarios.
+*/
 module coordinador {
-	//Definición de array de int
+	//Definición de array de int.
 	typedef sequence <long> vInt;
 	
 	// Creado por el coordinador. Mantiene información de los archivos de la red.
@@ -55,10 +63,10 @@ module coordinador {
 		void eliminarPeer(in long id);
 		vInt getSeeds();
 		vInt getPeers();
-		cliente::vPartes getPartes(in long id);
+		cliente::vPartes getPartes(in long id); // Devuelve las partes que posee el usuario con identificador id
 	};
 
-
+	// Sirviente que permite a los usuarios conectarse a la red, desconectarse y recuperar informacion sobre los archivos.
 	interface Coordinador{
 		long conectar(in cliente::estrArchivos eas, in cliente::Usuario usuario);
 		void desconectar(in cliente::estrArchivos eas, in long idUsuario);
