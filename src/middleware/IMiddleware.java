@@ -1,6 +1,6 @@
 /**********************************************************************************
-*  Copyright (C) 2006  Aarón Ruiz Mora              <slown_82@yahoo.es>           *
-*                      Pedro Antonio Gutiérrez Peña <pagutierres@uco.es>          *
+*  Copyright (C) 2006  Aarï¿½n Ruiz Mora              <slown_82@yahoo.es>           *
+*                      Pedro Antonio Gutiï¿½rrez Peï¿½a <pagutierres@uco.es>          *
 *                                                                                 *
 * This program is free software; you can redistribute it and/or                   *
 * modify it under the terms of the GNU General Public License                     *
@@ -20,10 +20,10 @@
 package middleware;
 
 /**
- * Interfaz genérica para el Middleware
+ * Interfaz genï¿½rica para el Middleware
  * 
- * @author Pedro Antonio Gutiérrez Peña
- *         Aarón Ruiz Mora
+ * @author Pedro Antonio Gutiï¿½rrez Peï¿½a
+ *         Aarï¿½n Ruiz Mora
  */
 
 public interface IMiddleware {
@@ -79,6 +79,7 @@ public interface IMiddleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public Object interfazSirviente(Class claseSirviente, Object referencia) throws MiddlewareException;
 	
 	/**
@@ -91,6 +92,7 @@ public interface IMiddleware {
 	 * @return Object Interfaz sirviente
 	 */
 	
+	@SuppressWarnings("unchecked")
 	public Object interfazSirviente(Class claseSirviente, String referencia) throws MiddlewareException;
 
 	/**

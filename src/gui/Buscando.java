@@ -1,27 +1,17 @@
-
 package gui;
+
 
 import java.awt.Cursor;
 import java.util.Hashtable;
 import javax.swing.JLabel;
-import javax.swing.table.DefaultTableModel;
-
 import coordinador.Archivo;
-
 import cliente.UsuarioClient;
 
+
 /**
- *
- * @author sema
+ * Clase encargada de realizar la búsqueda del archivo.
  */
 public class Buscando extends Thread {
-    private String _nombre;
-    private UsuarioClient _cliente;
-    private gui.ClienteP2P _interfaz;
-    private javax.swing.JLabel _barraProgreso;
-    private DefaultTableModel _modeloTablaBusqueda;
-    private Hashtable<Integer,Archivo> _tablaResBusqueda;
-
     /**
      * Constructor parametrizado del hilo "Buscando". Este recibe las referencias
      * @param aplicacionPpal Reperencia al objeto ClientP2P
@@ -35,6 +25,7 @@ public class Buscando extends Thread {
         _tablaResBusqueda=tablaResBusqueda;
     }
 
+
     /**
      * Método setter para el atributo "_nombre"
      * @param nombre Cadena que se va a asignar al atributo
@@ -42,6 +33,7 @@ public class Buscando extends Thread {
     public void setNombre(String nombre) {
     	_nombre=nombre;
     }
+    
     
     /**
      * Método que se ejecuta al realizar hilo.start()
@@ -70,6 +62,7 @@ public class Buscando extends Thread {
         parar();
     }
 
+    
     /**
      * Método que se ejecuta al llamar a hilo.parar()
      */
@@ -79,4 +72,11 @@ public class Buscando extends Thread {
         _interfaz.setCursor(new Cursor(Cursor.DEFAULT_CURSOR)); // Pone el puntero en normal
         _interfaz.cambiarEstado(""); // Y ponemos el texto por defecto
     }
+
+    
+    private String _nombre;
+    private UsuarioClient _cliente;
+    private gui.ClienteP2P _interfaz;
+    private javax.swing.JLabel _barraProgreso;
+    private Hashtable<Integer,Archivo> _tablaResBusqueda;
 }

@@ -10,13 +10,14 @@ package coordinador;
 
 
 // Creado por el coordinador. Mantiene información de los archivos de la red.
+@SuppressWarnings("unchecked")
 public abstract class ArchivoPOA extends org.omg.PortableServer.Servant
  implements coordinador.ArchivoOperations, org.omg.CORBA.portable.InvokeHandler
 {
 
   // Constructors
 
-  private static java.util.Hashtable _methods = new java.util.Hashtable ();
+private static java.util.Hashtable _methods = new java.util.Hashtable ();
   static
   {
     _methods.put ("_get_nombre", new java.lang.Integer (0));

@@ -10,6 +10,7 @@ package cliente;
 
 
 // Sirviente que proporciona partes de un archivo a los usuarios que se la solicitan.
+@SuppressWarnings("unchecked")
 public abstract class UsuarioPOA extends org.omg.PortableServer.Servant
  implements cliente.UsuarioOperations, org.omg.CORBA.portable.InvokeHandler
 {

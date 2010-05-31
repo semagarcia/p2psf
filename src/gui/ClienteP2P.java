@@ -1,5 +1,6 @@
 package gui;
 
+
 import java.awt.Cursor;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -36,28 +37,12 @@ import coordinador.Archivo;
  * Interfaz Gráfica Principal de la Aplicación P2PSF
  */
 public class ClienteP2P extends javax.swing.JFrame {
-	private static final long serialVersionUID = 1L;
-	private Buscando _hiloBusqueda;
-	private Hashtable<Integer,Archivo> _tablaResBusqueda;
-	private Hashtable<String,Downloader> _descargasActuales;
-	private Hashtable<EstrArchivo, JProgressBar> _descargasPendientes;
-    private int _tamBloque;
-    private int _conexionesMaximas;
-    private String _ipservidor;
-    private String _iplocal;
-    private int _puerto;
-	private String _rutaDescargas;
-    private String _nombreBiblioteca;
-    private boolean _conectado = false;
-    private MenuContextual _menuContextual;
-    private DefaultTableModel _modeloTablaDescargas = new DefaultTableModel();
-    private DefaultListModel _modeloListaRecursos = new DefaultListModel();
-    private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
     public UsuarioClient cliente;
-    private ArrayList<EstrArchivo> _easTmp;
 
     
-    /** Constructor del ClienteP2P */
+    /**
+     * Constructor del ClienteP2P
+     */
     public ClienteP2P() {
     	_hiloBusqueda = null;
     	_tablaResBusqueda=new Hashtable<Integer,Archivo>();
@@ -115,6 +100,10 @@ public class ClienteP2P extends javax.swing.JFrame {
     }
     
     
+    /**
+     * Actualiza la información de una descarga en la estructura local de archivos y en la biblioteca.
+     * @param estrArchivo Información del archivo a actualizar.
+     */
 	public void almacenarDescarga(EstrArchivo estrArchivo) {
 		boolean encontrado=false;
 		int i=0;
@@ -129,6 +118,12 @@ public class ClienteP2P extends javax.swing.JFrame {
 		almacenarBiblioteca();
 	}
 
+	
+	/**
+	 * Aumenta el número de conexiones a mostrar en la barra de descargas. 
+	 * @param ruta Ruta del fichero que se está descargando.
+	 * @param num Número de conexiones a sumar.
+	 */
 	public synchronized void sumarConexiones(String ruta, int num) {
 		boolean encontrado=false;
 		int i=0;
@@ -146,6 +141,12 @@ public class ClienteP2P extends javax.swing.JFrame {
 		}
 	}
 
+	
+	/**
+	 * Cancela una descarga.
+	 * @param ruta Ruta donde se está almacenando la descarga.
+	 * @param fila Fila en la que se encuentra la descarga en la tabla de descargas.
+	 */
 	public void cancelarDescarga(String ruta, int fila) { 		 		
  		boolean encontrado=false;
  		int i=0;
@@ -178,7 +179,326 @@ public class ClienteP2P extends javax.swing.JFrame {
         	_modeloTablaBusqueda.removeRow(i);		
 	}
 
-    /** Otras inicializaciones */
+
+	/**
+     * Esta función será la encargada de enviar al coordinador la lista de archivos
+     * que posee el usuario localmente y recibe el identificador que éste le envía
+     * @param evt Evento ocurrido.
+     */
+    public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {
+    	if(!_conectado) {
+    		try {
+    			cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto,this);
+    			_conectado = cliente.conectar();
+    			cliente.anyadir(_easTmp);
+    			
+    			//Actualiza el id del usuario en las descargas actuales
+    			Enumeration<Downloader> descargas = _descargasActuales.elements();
+    			while(descargas.hasMoreElements()) {
+    				descargas.nextElement().actualizarId(cliente.getId());
+    			}
+    			
+    			//Recorre las descargas pendientes para crear los hilos downloader
+    			Enumeration<EstrArchivo> keys = _descargasPendientes.keys();
+    			Archivo a;
+    			Downloader d;
+    			EstrArchivo e;
+    			while(keys.hasMoreElements()) {
+    				e=keys.nextElement();
+    				a=cliente.buscar(e.info.nombre);
+    				if(a!=null) {
+    					long sum=0;
+    					for(int i=0;i<e.partes.length;i++) {
+    						sum+=e.partes[i].fin-e.partes[i].inicio;
+    					}
+    					float porcentaje=sum*100/e.info.tam;
+    					_descargasPendientes.remove(e);
+    					d=cliente.descargar(a, e.partes, porcentaje, _conexionesMaximas, _tamBloque, e.info.ruta);
+    					_descargasActuales.put(e.info.ruta, d);
+    				}
+    			}
+    		}
+    		catch(Exception e) {
+    			javax.swing.JOptionPane.showMessageDialog(this,
+    					"Error: No se puede encontrar el servidor." +
+    					" Cambie los parámetros de conexión en el menú" +
+    					" \"Opciones\" e inténtelo de nuevo.","Error de conexión", javax.swing.JOptionPane.ERROR_MESSAGE);
+    		}
+
+    		if(_conectado) {
+    			cambiarEstado("");
+    			iconConectar.setEnabled(false);
+    			iconDesconectar.setEnabled(true);
+    			botonBuscar.setEnabled(true);
+        	
+    			//Deshabilitar acciones descargas
+    			_menuContextual.mostrarParado();
+    			cambiarEstado("");
+    		}
+    	}
+    }
+
+    
+    /**
+     * Cuando se quiera desconectar el usuario, debe comunicarselo al coordinador
+     * @param evt Evento ocurrido.
+     */
+    public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {
+    	if(_conectado) {
+    		
+    		//Para los hilos Downloader
+    		Enumeration<String> rutas= _descargasActuales.keys();
+    		Downloader d;
+    		String ruta;
+    		while(rutas.hasMoreElements()) {
+    			ruta=rutas.nextElement();
+    			d=_descargasActuales.get(ruta);
+    			_descargasActuales.put(ruta, d.parar());
+    			//Deshabilitar acciones descargas
+    			_menuContextual.parar(d.ruta);
+    		}
+    		
+    		_conectado = !cliente.desconectar();
+    		cliente=null;
+    	
+    		if(!_conectado) {
+    			cambiarEstado("");
+    			iconConectar.setEnabled(true);
+    			iconDesconectar.setEnabled(false);
+    			botonBuscar.setEnabled(false);
+        	
+    			limpiarResultadosBusqueda();
+    		}
+    		else cambiarEstado("Error al desconectar.");
+    	}
+    }
+
+    
+    /**
+     * Método que eliminar todos los resultados de la búsqueda de un archivo
+     * @param evt Evento ocurrido.
+     */
+    public void opcionP2PLimpiarResultadosActionPerformed(java.awt.event.ActionEvent evt) {
+        for (int i=_modeloTablaBusqueda.getRowCount()-1; i>=0; i--)
+            _modeloTablaBusqueda.removeRow(i);
+    }
+
+    
+    /**
+     * Método que muestra un mensaje en la barra de estado. Si se llama con la
+     * cadena vacía, se asignará el mensaje de estado por defecto.
+     * @param estado Mensaje a mostrar en la barra de estado
+     */
+    public void cambiarEstado(String estado) {
+        if (!estado.equals("")) // Si el estado contiene algo
+            valorEstadoActual.setText(estado);
+        else // Si la cadena está vacía, se pone el estado por defecto
+            if (_conectado)
+                valorEstadoActual.setText("Conectado");
+            else
+                valorEstadoActual.setText("Desconectado");
+    }
+    
+    
+    /**
+     * Método que añade una nueva fila a la tabla de búsqueda
+     * @param n Nombre del fichero encontrado
+     * @param t Tamaño del fichero encontrado
+     * @param c Checksum del fichero encontrado
+     * @param s Número de seeds del fichero encontrado
+     * @param p Número de peers del fichero encontrado
+     */
+    public void nuevoResultado(String n, long t, long c, int s, int p) {
+   	 // El orden correcto es: nombre, tamaño, seeds, peers, checksum
+        _modeloTablaBusqueda.addRow(new Object[]{n, t, s, p, c});
+    }
+
+    
+    /**
+     * Método que elimina la fila i-ésima de la tabla resultados
+     * @param fila Número de fila a eliminar
+     */
+    public void eliminarResultado(int fila) {
+        _modeloTablaBusqueda.removeRow(fila);
+    }
+
+    
+    /**
+     * Método que añade una descarga de las buscadas
+     * @param a Objeto Archivo correspondiente al archivo a descargar
+     * @param r Ruta donde el archivo está siendo o será almacenado
+     * @param c Porcentaje completado
+     */
+    public void nuevaDescarga(Archivo a, parteArchivo[] partes, float p) {
+   		String ruta=_rutaDescargas+a.nombre();
+   		Downloader d;
+
+   		JProgressBar barra = crearBarraDescarga(p, String.valueOf((int)p)+"%");
+   		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra, 0});
+		_menuContextual.nuevoEstado(ruta);
+   		d=cliente.descargar(a, partes, p, _conexionesMaximas, _tamBloque, ruta);
+		_descargasActuales.put(ruta, d);
+    }
+    
+    
+    /**
+     * Metodo para anyadir las descargas activas al iniciar la aplicación
+     * @param e Estructura del archivo a descargar.
+     * @param p Porcentaje descargado.
+     */
+	public void nuevaDescarga(EstrArchivo e, float p) {
+		String ruta=_rutaDescargas+e.info.nombre;
+   		Downloader d;
+
+   		JProgressBar barra=crearBarraDescarga(p, String.valueOf((int)p)+"%");
+   		_modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, barra, 0});
+		_menuContextual.nuevoEstado(ruta);
+		Archivo a=null;
+		if(conectado())
+			a=cliente.buscar(e.info.nombre);
+		if(a!=null) {
+			d=cliente.descargar(a, e.partes, p, _conexionesMaximas, _tamBloque, ruta);
+			_descargasActuales.put(ruta, d);
+		}
+		else
+			_descargasPendientes.put(e,barra);
+	}
+
+	
+    /**
+     * Método que elimina la fila i-ésima de la tabla descargas
+     * @param fila Numero de fila a eliminar
+     */
+    public void eliminarDescarga(int fila) {
+        _modeloTablaDescargas.removeRow(fila);
+        _tablaDescargas.setModel(_modeloTablaDescargas);
+    }
+    
+    
+    /**
+     * Método que asigna los valores de tamaño y conexiones maximas
+     * @param t El tamaño de los bloques a descargar (tamaño de las partes)
+     * @param c El número de conexiones máximas
+     * @throws IOException 
+     */
+    public void establecerOpciones(int t, int c, String ipservidor, String iplocal, int puerto, String rutaDescargas) throws IOException {
+        _tamBloque = t;
+        _conexionesMaximas = c;
+        _ipservidor=ipservidor;
+        _iplocal=iplocal;
+        _puerto=puerto;
+        _rutaDescargas=rutaDescargas;
+        
+        File f=new File(_rutaDescargas);
+        if(!f.isDirectory()) f.mkdir();
+        
+        PrintWriter salida;
+        
+        salida=new PrintWriter(new FileWriter("opciones.txt"));
+        salida.write(_tamBloque+"\n");
+        salida.write(_conexionesMaximas+"\n");
+        salida.write(_ipservidor+"\n");
+        salida.write(_iplocal+"\n");
+        salida.write(_puerto+"\n");
+        salida.write(_rutaDescargas+"\n");
+        salida.flush();
+        salida.close();
+    }
+
+    
+    /**
+     * Método que crea una nueva barra de progreso personalizada
+     * @param maximo Valor máximo de la barra de progreso
+     * @param porcentaje Establece el porcentaje que tendrá la barra
+     * @param informacion Muestra esta cadena de texto dentro de la barra
+     * @return La barra de progreso creada.
+     */
+    public JProgressBar crearBarraDescarga(float porcentaje, String informacion) {
+        JProgressBar progressBar = new JProgressBar(0, 100);
+
+        progressBar.setValue((int)porcentaje); // Porcentaje actual
+        progressBar.setString(informacion); // Información a mostrar
+        progressBar.setStringPainted(true); // Mostrar información en la barra
+
+        return progressBar;
+    }
+
+    
+    /**
+     * Método que, dado el nombre de un archivo que se está descargando, ha
+     * recibido una nueva parte y debe actualizar su barra de progreso con la
+     * cantidad de bytes recibidos (en proporción al tamaño total).
+     * @param archivo Archivo del que se ha obtenido una nueva parte
+     * @param tamParte La longitud de la parte obtenida
+     */
+    public void actualizarDescarga(String archivo, int porcentaje) {
+        JProgressBar aux = null;
+        boolean encontrado=false;
+        int i=0;
+        
+        while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+            if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
+            	encontrado=true;
+                aux = (JProgressBar) _modeloTablaDescargas.getValueAt(i, 2);
+                aux.setString(porcentaje+"%");
+                aux.setValue(porcentaje);
+                _tablaDescargas.repaint();
+            }
+            else
+            	i++;
+        }
+    }
+    
+    
+    /**
+     * Método que devuelve el valor del atributo "conectado"
+     * @return true si está conectado a la red P2P y false en caso contrario
+     */
+    public boolean conectado() {
+ 		return _conectado;
+ 	 }
+
+ 	
+    
+    /**
+ 	 * Mueve la descarga finalizada a compartidos
+ 	 */
+ 	public synchronized void finalizarDescarga(EstrArchivo archivo) {
+ 		boolean encontrado=false;
+ 		int i=0;
+ 		 		
+ 		_descargasActuales.remove(archivo.info.ruta);
+ 		
+ 		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
+             if(archivo.info.nombre.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
+             else i++;
+         }
+ 		if(encontrado)
+ 			eliminarDescarga(i);
+ 		
+ 		_modeloListaRecursos.addElement(archivo.info.ruta);
+ 		
+ 		almacenarDescarga(archivo);
+ 	}
+
+ 	
+    /**
+     * Método principal de la aplicación. Muestra la ventana de la aplicación y carga todo lo
+     * necesario.
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new ClienteP2P().setVisible(true);
+            }
+        });
+    }
+
+    
+	/**
+	 * Otras inicializaciones
+	 */
     private void initComponents() {
         panelPpal = new javax.swing.JPanel();
         pestanyasApp = new javax.swing.JTabbedPane();
@@ -790,6 +1110,7 @@ public class ClienteP2P extends javax.swing.JFrame {
         pack();
     }
 
+
     /**
      * Método que añade una nueva descarga
      * @param archivo Estructura Archivo que se debe añadir como nueva descarga
@@ -802,489 +1123,17 @@ public class ClienteP2P extends javax.swing.JFrame {
     		}
 	}
 
+
     /**
      * Capturador del evento de la tecla enter sobre el campo de búsqueda de archivos
-     * @param evt
+     * @param evt Evento ocurrido.
      */
 	private void cajaTextoNomFichKeyReleased(KeyEvent evt) {
     	if(evt.getKeyCode()==KeyEvent.VK_ENTER)
     		botonBuscarActionPerformed(null);
 	}
 
-	/**
-     * Esta función será la encargada de enviar al coordinador la lista de archivos
-     * que posee el usuario localmente y recibe el identificador que éste le envía
-     * @param evt
-     */
-    public void opcionArchivoLoginActionPerformed(java.awt.event.ActionEvent evt) {
-    	if(!_conectado) {
-    		try {
-    			cliente=new UsuarioClient(_ipservidor,_iplocal,_puerto,this);
-    			_conectado = cliente.conectar();
-    			cliente.anyadir(_easTmp);
-    			
-    			//Actualiza el id del usuario en las descargas actuales
-    			Enumeration<Downloader> descargas = _descargasActuales.elements();
-    			while(descargas.hasMoreElements()) {
-    				descargas.nextElement().actualizarId(cliente.getId());
-    			}
-    			
-    			//Recorre las descargas pendientes para crear los hilos downloader
-    			Enumeration<EstrArchivo> keys = _descargasPendientes.keys();
-    			Archivo a;
-    			Downloader d;
-    			EstrArchivo e;
-    			while(keys.hasMoreElements()) {
-    				e=keys.nextElement();
-    				a=cliente.buscar(e.info.nombre);
-    				if(a!=null) {
-    					long sum=0;
-    					for(int i=0;i<e.partes.length;i++) {
-    						sum+=e.partes[i].fin-e.partes[i].inicio;
-    					}
-    					float porcentaje=sum*100/e.info.tam;
-    					_descargasPendientes.remove(e);
-    					d=cliente.descargar(a, e.partes, porcentaje, _conexionesMaximas, _tamBloque, e.info.ruta);
-    					_descargasActuales.put(e.info.ruta, d);
-    				}
-    			}
-    		}
-    		catch(Exception e) {
-    			javax.swing.JOptionPane.showMessageDialog(this,
-    					"Error: No se puede encontrar el servidor." +
-    					" Cambie los parámetros de conexión en el menú" +
-    					" \"Opciones\" e inténtelo de nuevo.","Error de conexión", javax.swing.JOptionPane.ERROR_MESSAGE);
-    		}
-
-    		if(_conectado) {
-    			cambiarEstado("");
-    			iconConectar.setEnabled(false);
-    			iconDesconectar.setEnabled(true);
-    			botonBuscar.setEnabled(true);
-        	
-    			//Deshabilitar acciones descargas
-    			_menuContextual.mostrarParado();
-    			cambiarEstado("");
-    		}
-    	}
-    }
-
-    /**
-     * Cuando se pulse sobre el icono de conectar se llamará a su correspondiente
-     * función (opcionArchivoLoginActionPerformed), el manejador del evento.
-     * @param evt
-     */
-    private void iconConectarActionPerformed(java.awt.event.ActionEvent evt) {
-        opcionArchivoLoginActionPerformed(evt);
-    }
-
-    /**
-     * Cuando se quiera desconectar el usuario, debe comunicarselo al coordinador
-     * @param evt
-     */
-    public void opcionArchivoLogoutActionPerformed(java.awt.event.ActionEvent evt) {
-    	if(_conectado) {
-    		
-    		//Para los hilos Downloader
-    		Enumeration<String> rutas= _descargasActuales.keys();
-    		Downloader d;
-    		String ruta;
-    		while(rutas.hasMoreElements()) {
-    			ruta=rutas.nextElement();
-    			d=_descargasActuales.get(ruta);
-    			_descargasActuales.put(ruta, d.parar());
-    			//Deshabilitar acciones descargas
-    			_menuContextual.parar(d.ruta);
-    		}
-    		
-    		_conectado = !cliente.desconectar();
-    		cliente=null;
-    	
-    		if(!_conectado) {
-    			cambiarEstado("");
-    			iconConectar.setEnabled(true);
-    			iconDesconectar.setEnabled(false);
-    			botonBuscar.setEnabled(false);
-        	
-    			limpiarResultadosBusqueda();
-    		}
-    		else cambiarEstado("Error al desconectar.");
-    	}
-    }
-
-
-	/**
-     * Cuando se pulse sobre el icono de desconectar se llamará a su correspondiente
-     * función (opcionArchivoLogoutActionPerformed), el manejador del evento.
-     * @param evt
-     */
-    private void iconDesconectarActionPerformed(java.awt.event.ActionEvent evt) {
-        this.opcionArchivoLogoutActionPerformed(evt);
-    }
-
-    /**
-     * Muestra la pestaña correspondiente a "Mi Biblioteca"
-     * @param evt
-     */
-    private void opcionP2PBibliotecaActionPerformed(java.awt.event.ActionEvent evt) {
-        pestanyasApp.setSelectedIndex(0);
-    }
-
-    /**
-     * Muestra la pestaña correspondiente a "Busquedas"
-     * @param evt
-     */
-    private void opcionP2PBusquedaActionPerformed(java.awt.event.ActionEvent evt) {
-        pestanyasApp.setSelectedIndex(1);
-    }
-
-    /**
-     * Muestra la pestaña correspondiente a Descargas
-     * @param evt
-     */
-    private void opcionP2PDescargasActionPerformed(java.awt.event.ActionEvent evt) {
-        pestanyasApp.setSelectedIndex(2);
-    }
-
-    /**
-     * Método que eliminar todos los resultados de la búsqueda de un archivo
-     * @param evt
-     */
-    public void opcionP2PLimpiarResultadosActionPerformed(java.awt.event.ActionEvent evt) {
-        for (int i=_modeloTablaBusqueda.getRowCount()-1; i>=0; i--)
-            _modeloTablaBusqueda.removeRow(i);
-    }
-
-    /**
-     * Muestra la ventana típica de ayuda
-     * @param evt
-     */
-    private void ayudaAyudaActionPerformed(java.awt.event.ActionEvent evt) {
-        // Cuando se pulse sobre la ayuda se abre dicha ventana
-        Ayuda a = new Ayuda(this, true); // La instanciamos. Será modal
-        a.setVisible(true); // Y la mostramos
-    }
-
-    /**
-     * Muestra los créditos del programa. Información acerca del mismo.
-     * @param evt
-     */
-    private void ayudaAcercaDeActionPerformed(java.awt.event.ActionEvent evt) {
-        // Cuando se pulse sobre la ayuda se abre dicha ventana
-        AcercaDe ad = new AcercaDe(this, true); // La instanciamos. Será modal
-        ad.setVisible(true); // Y la mostramos
-    }
-
-    /**
-     * Método que llama a la función encargada de mostrar la ayuda
-     * @param evt
-     */
-    private void iconAyudaActionPerformed(java.awt.event.ActionEvent evt) {
-        this.ayudaAyudaActionPerformed(evt);
-    }
-
-    /**
-     * Método que llama la función encargada de mostrar el "acerca de"
-     * @param evt
-     */
-    private void iconSalirActionPerformed(java.awt.event.ActionEvent evt) {
-        // Si ha pulsado sobre el icono de salir se llama a la función correspondiente
-        this.opcionArchivoSalirActionPerformed(evt);
-    }
-
-    /**
-     * Método encargado de cerrar la aplicación. Para ello, antes lo notifica
-     * al coordinador y luego cierra la aplicación.
-     * @param evt
-     */
-    private void opcionArchivoSalirActionPerformed(java.awt.event.ActionEvent evt) {
-        // 1 - Decirle al coordinador que nos vamos
-        opcionArchivoLogoutActionPerformed(evt);
-
-        // 2 - Cerrar la aplicación
-        System.exit(0);
-    }
-
-    /**
-     * Cuando se pulse sobre el botón "Búscalo" se instancia el hilo encargado
-     * de la visualización y ocultamiento de la animación
-     * @param evt
-     */
-    @SuppressWarnings("deprecation")
-	private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {
-    	if(_conectado) {
-    		if(_hiloBusqueda!=null)
-    			_hiloBusqueda.stop();            	
-        	
-    		_hiloBusqueda = new Buscando(this, _loaderBuscando, cliente, _tablaResBusqueda);
-    		
-    		_hiloBusqueda.setNombre(cajaTextoNomFich.getText());
-    		_hiloBusqueda.start(); // Lanza el hilo
-    	}
-    }
-
-    /**
-     * Método encargado de abrir una ventana (JFileChooser) para escoger los
-     * archivos (permite selección múltiple) de nuevos archivos que van a ser
-     * compartidos por el usuario
-     * @param evt
-     */
-    private void anyadirRecursoMouseClicked(java.awt.event.MouseEvent evt) {
-        // Cuando se pulse en el botón Añadir Recurso
-        int opc = 0;
-        File [] ficheros;
-
-        // Creamos una ventana para que el usuario escoja su(s) fichero(s)
-        javax.swing.JFileChooser anyadir = new javax.swing.JFileChooser();
-        anyadir.setMultiSelectionEnabled(true); // Multiselección
-        anyadir.setFileSelectionMode(javax.swing.JFileChooser.FILES_ONLY);
-
-        opc = anyadir.showOpenDialog(this); // Se muestra el diálogo
-
-        EstrArchivo eA;
-        infoArchivo iA;
-        parteArchivo[] pA;
-        
-        // Ahora comprobamos si ha pulsado sobre aceptar
-        if (opc == javax.swing.JFileChooser.APPROVE_OPTION) {
-            ficheros = anyadir.getSelectedFiles(); // Obtenemos los ficheros seleccionados
-            //String [] fich = new String[ficheros.length];
-            for (int i=0; i<ficheros.length; i++) {
-            	iA=getInfoArchivo(ficheros[i]);
-            	pA=new parteArchivo[1];
-            	pA[0]=new parteArchivo();
-            	pA[0].inicio=0;
-            	pA[0].fin=iA.tam;
-            	pA[0].pedido=false;
-            	pA[0].descargado=false;
-            	eA=new EstrArchivo(iA,pA);
-            	_easTmp.add(eA);
-                _modeloListaRecursos.addElement(ficheros[i].getPath());
-            }
-        }
-    }
     
-
-    /**
-     * Función que obtiene la informacion de un fichero
-     * @param file
-     * @return
-     */
-    private infoArchivo getInfoArchivo(File file) {
-   	 	infoArchivo aux = new infoArchivo();
-        CheckedInputStream suma = null;
-
-        try { // Se lee el fichero y se va creando el checksum
-        	FileInputStream f = new FileInputStream(file);
-            suma = new CheckedInputStream(f, new CRC32());
-            BufferedInputStream in = new BufferedInputStream(suma);
-
-          	while (in.read() != -1) {  }
-            in.close(); // Cerramos el fichero
-        }
-        catch (IOException ex) {
-      	  javax.swing.JOptionPane.showMessageDialog(this, 
-      			  "¡Error al calcular el checksum de \""+file.getName()+"\"!");
-        }
-
-        // Asignamos la información del archivo
-        aux.nombre=file.getName();
-        aux.ruta=file.getPath();
-        aux.checksum=suma.getChecksum().getValue();
-        aux.tam=file.length();    	
-
-        return aux;
-	}
-
-	/**
-     * Cuando se pulse sobre el botón eliminar se evalúa si hay recursos seleccionados,
-     * y en caso de existir, se eliminan. Si no, se muestra un aviso
-     * @param evt
-     */
-    private void quitarRecursoMouseClicked(java.awt.event.MouseEvent evt) {
-        // Obtenemos el indice que ocupan los elementos que se han seleccionado
-        int [] indices = _listaFicherosCompartidos.getSelectedIndices();
-        String fichero; 
-        String nombre=new String();
-               
-        // Si no hay ningun elemento seleccionado
-        if (indices.length == 0)
-            javax.swing.JOptionPane.showMessageDialog(this,
-                    "No ha seleccionado ningún elemento para eliminar");
-        
-        // Eliminamos desde el final para evitar problemas con los índices
-        for (int i=indices.length - 1; i>=0; i--) {
-            fichero=(String) _modeloListaRecursos.getElementAt(indices[i]);
-            nombre=fichero.substring(fichero.lastIndexOf("/")+1,fichero.length());
-            int j=0;
-            while(j<_easTmp.size()) {
-            	if(_easTmp.get(j).info.nombre.equals(nombre)) {
-            		_easTmp.remove(j);
-            		j=_easTmp.size();
-            	} else j++;
-            }
-            _modeloListaRecursos.removeElementAt(indices[i]);
-        }
-    }
-
-    /**
-     * Cuando se pulse sobre el botón de actualizar la bibioteca se examinan los
-     * archivos que hay en la lista y se genera un XML con dicha información
-     * @param evt
-     */
-    void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {
-    	String resultado="";
-    	
-    	if(almacenarBiblioteca()) // Comprobamos que se ha guardado correctamente
-    	    resultado+="¡Archivo \""+_nombreBiblioteca+"\" generado correctamente!";
-        else // Error al guardar el archivo
-            resultado+="Error al generar el archivo \""+_nombreBiblioteca+"\"";
-        
-        if(_conectado)
-        	cliente.anyadir(_easTmp);
-        // Mostramos el mensaje mediante una ventanita
-        javax.swing.JOptionPane.showMessageDialog(this,resultado);
-    }
-
-    private boolean almacenarBiblioteca() {
-    	Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
-        boolean resultado=false;
-        
-        // Recorremos todos los elementos de la lista y los metemos en el xml
-        for (int i=0; i<_easTmp.size(); i++) {
-            bib.insertarNuevoArchivo(_easTmp.get(i));
-        }
-
-        if(bib.guardarXML()) // Archivo guardado correctamente
-            resultado=true;
-
-		return resultado;
-	}
-
-	/**
-     * Método que muestra la ventana de configuración de la aplicación
-     * @param evt
-     */
-    private void opcionArchivoOpcionesActionPerformed(java.awt.event.ActionEvent evt) {
-        Opciones opciones = new Opciones(this, _ipservidor, _iplocal, _puerto, _tamBloque, _conexionesMaximas, _rutaDescargas, this);
-        opciones.setVisible(true);
-    }
-
-    /**
-     * Método que muestra un mensaje en la barra de estado. Si se llama con la
-     * cadena vacía, se asignará el mensaje de estado por defecto.
-     * @param estado Mensaje a mostrar en la barra de estado
-     */
-    public void cambiarEstado(String estado) {
-        if (!estado.equals("")) // Si el estado contiene algo
-            valorEstadoActual.setText(estado);
-        else // Si la cadena está vacía, se pone el estado por defecto
-            if (_conectado)
-                valorEstadoActual.setText("Conectado");
-            else
-                valorEstadoActual.setText("Desconectado");
-    }
-
-    /**
-     * Función que carga en la aplicación todos los ficheros compartidos por el usuario
-     */
-    private void cargarBiblioteca() {
-        ParserXML parser = new ParserXML(_nombreBiblioteca);
-
-        // Parseamos primero el archivo XML para obtener el arbol cargado en memoria
-        	try {
-				parser.parsearArchivoXML();
-			} catch (IOException e) {
-				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion IOException");
-				e.printStackTrace();
-			} catch (ParserConfigurationException e) {
-				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion ParserConfigurationException");
-				e.printStackTrace();
-			} catch (SAXException e) {
-				// Cuando el XML esté mal formado, se borra y se sale de la aplicación
-				javax.swing.JOptionPane.showMessageDialog(this, 
-						"¡Error grave! El fichero biblioteca está mal formado. Reinicie la aplicación.");	
-				File xmlBiblio = new File(_nombreBiblioteca);
-				// Si no se ha borrado correctamente el XML, se le pide que al usuario que lo haga él
-				if(!xmlBiblio.delete())
-					javax.swing.JOptionPane.showMessageDialog(this, 
-							"Por favor, borre manualmente el archivo \"" + _nombreBiblioteca + "\"");	
-				System.exit(0); // Salimos de la aplicación
-			}
-        
-        // Despues parseamos el arbol XML para extraer la informacion y meterla en el ArrayList
-			_easTmp = parser.parsearDocumento(_modeloListaRecursos, this);
-        
-        if(_conectado) // Y si está conectado, lo añadimos
-        	cliente.anyadir(_easTmp);
-    }
-    
-    /**
-     * Método que añade una nueva fila a la tabla de búsqueda
-     * @param n Nombre del fichero encontrado
-     * @param t Tamaño del fichero encontrado
-     * @param c Checksum del fichero encontrado
-     * @param s Número de seeds del fichero encontrado
-     * @param p Número de peers del fichero encontrado
-     */
-    public void nuevoResultado(String n, long t, long c, int s, int p) {
-   	 // El orden correcto es: nombre, tamaño, seeds, peers, checksum
-        _modeloTablaBusqueda.addRow(new Object[]{n, t, s, p, c});
-    }
-
-    /**
-     * Método que elimina la fila i-ésima de la tabla resultados
-     * @param fila Número de fila a eliminar
-     */
-    public void eliminarResultado(int fila) {
-        _modeloTablaBusqueda.removeRow(fila);
-    }
-
-    /**
-     * Método que añade una descarga de las buscadas
-     * @param a Objeto Archivo correspondiente al archivo a descargar
-     * @param r Ruta donde el archivo está siendo o será almacenado
-     * @param c Porcentaje completado
-     */
-    public void nuevaDescarga(Archivo a, parteArchivo[] partes, float p) {
-   		String ruta=_rutaDescargas+a.nombre();
-   		Downloader d;
-
-   		JProgressBar barra = crearBarraDescarga(p, String.valueOf((int)p)+"%");
-   		_modeloTablaDescargas.addRow(new Object[]{a.nombre(), ruta, barra, 0});
-		_menuContextual.nuevoEstado(ruta);
-   		d=cliente.descargar(a, partes, p, _conexionesMaximas, _tamBloque, ruta);
-		_descargasActuales.put(ruta, d);
-    }
-    
-    //Metodo para anyadir las descargas activas al iniciar la aplicación
-	public void nuevaDescarga(EstrArchivo e, float p) {
-		String ruta=_rutaDescargas+e.info.nombre;
-   		Downloader d;
-
-   		JProgressBar barra=crearBarraDescarga(p, String.valueOf((int)p)+"%");
-   		_modeloTablaDescargas.addRow(new Object[]{e.info.nombre, ruta, barra, 0});
-		_menuContextual.nuevoEstado(ruta);
-		Archivo a=null;
-		if(conectado())
-			a=cliente.buscar(e.info.nombre);
-		if(a!=null) {
-			d=cliente.descargar(a, e.partes, p, _conexionesMaximas, _tamBloque, ruta);
-			_descargasActuales.put(ruta, d);
-		}
-		else
-			_descargasPendientes.put(e,barra);
-	}
-
-    /**
-     * Método que elimina la fila i-ésima de la tabla descargas
-     * @param fila Numero de fila a eliminar
-     */
-    public void eliminarDescarga(int fila) {
-        _modeloTablaDescargas.removeRow(fila);
-        _tablaDescargas.setModel(_modeloTablaDescargas);
-    }
-
     /**
      * Método que busca el archivo de configuración (opciones.txt), lo carga y lo lee.
      * Si no existe, crea un nuevo con unos valores por defecto
@@ -1332,120 +1181,340 @@ public class ClienteP2P extends javax.swing.JFrame {
         	opcionArchivoOpcionesActionPerformed(null);
 		}
 	}
+
     
     /**
-     * Método que asigna los valores de tamaño y conexiones maximas
-     * @param t El tamaño de los bloques a descargar (tamaño de las partes)
-     * @param c El número de conexiones máximas
-     * @throws IOException 
+     * Cuando se pulse sobre el icono de conectar se llamará a su correspondiente
+     * función (opcionArchivoLoginActionPerformed), el manejador del evento.
+     * @param evt Evento ocurrido.
      */
-    public void establecerOpciones(int t, int c, String ipservidor, String iplocal, int puerto, String rutaDescargas) throws IOException {
-        _tamBloque = t;
-        _conexionesMaximas = c;
-        _ipservidor=ipservidor;
-        _iplocal=iplocal;
-        _puerto=puerto;
-        _rutaDescargas=rutaDescargas;
-        
-        File f=new File(_rutaDescargas);
-        if(!f.isDirectory()) f.mkdir();
-        
-        PrintWriter salida;
-        
-        salida=new PrintWriter(new FileWriter("opciones.txt"));
-        salida.write(_tamBloque+"\n");
-        salida.write(_conexionesMaximas+"\n");
-        salida.write(_ipservidor+"\n");
-        salida.write(_iplocal+"\n");
-        salida.write(_puerto+"\n");
-        salida.write(_rutaDescargas+"\n");
-        salida.flush();
-        salida.close();
+    private void iconConectarActionPerformed(java.awt.event.ActionEvent evt) {
+        opcionArchivoLoginActionPerformed(evt);
     }
 
-    /**
-     * Método que crea una nueva barra de progreso personalizada
-     * @param maximo Valor máximo de la barra de progreso
-     * @param porcentaje Establece el porcentaje que tendrá la barra
-     * @param informacion Muestra esta cadena de texto dentro de la barra
-     * @return
+    
+	/**
+     * Cuando se pulse sobre el icono de desconectar se llamará a su correspondiente
+     * función (opcionArchivoLogoutActionPerformed), el manejador del evento.
+     * @param evt Evento ocurrido.
      */
-    public JProgressBar crearBarraDescarga(float porcentaje, String informacion) {
-        JProgressBar progressBar = new JProgressBar(0, 100);
-
-        progressBar.setValue((int)porcentaje); // Porcentaje actual
-        progressBar.setString(informacion); // Información a mostrar
-        progressBar.setStringPainted(true); // Mostrar información en la barra
-
-        return progressBar;
+    private void iconDesconectarActionPerformed(java.awt.event.ActionEvent evt) {
+        this.opcionArchivoLogoutActionPerformed(evt);
     }
 
+    
     /**
-     * Método que, dado el nombre de un archivo que se está descargando, ha
-     * recibido una nueva parte y debe actualizar su barra de progreso con la
-     * cantidad de bytes recibidos (en proporción al tamaño total).
-     * @param archivo Archivo del que se ha obtenido una nueva parte
-     * @param tamParte La longitud de la parte obtenida
+     * Muestra la pestaña correspondiente a "Mi Biblioteca"
+     * @param evt Evento ocurrido.
      */
-    public void actualizarDescarga(String archivo, int porcentaje) {
-        JProgressBar aux = null;
-        boolean encontrado=false;
-        int i=0;
+    private void opcionP2PBibliotecaActionPerformed(java.awt.event.ActionEvent evt) {
+        pestanyasApp.setSelectedIndex(0);
+    }
+
+    
+    /**
+     * Muestra la pestaña correspondiente a "Busquedas"
+     * @param evt Evento ocurrido.
+     */
+    private void opcionP2PBusquedaActionPerformed(java.awt.event.ActionEvent evt) {
+        pestanyasApp.setSelectedIndex(1);
+    }
+
+    
+    /**
+     * Muestra la pestaña correspondiente a Descargas
+     * @param evt Evento ocurrido.
+     */
+    private void opcionP2PDescargasActionPerformed(java.awt.event.ActionEvent evt) {
+        pestanyasApp.setSelectedIndex(2);
+    }
+
+    
+    /**
+     * Muestra la ventana típica de ayuda
+     * @param evt Evento ocurrido.
+     */
+    private void ayudaAyudaActionPerformed(java.awt.event.ActionEvent evt) {
+        // Cuando se pulse sobre la ayuda se abre dicha ventana
+        Ayuda a = new Ayuda(this, true); // La instanciamos. Será modal
+        a.setVisible(true); // Y la mostramos
+    }
+
+    
+    /**
+     * Muestra los créditos del programa. Información acerca del mismo.
+     * @param evt Evento ocurrido.
+     */
+    private void ayudaAcercaDeActionPerformed(java.awt.event.ActionEvent evt) {
+        // Cuando se pulse sobre la ayuda se abre dicha ventana
+        AcercaDe ad = new AcercaDe(this, true); // La instanciamos. Será modal
+        ad.setVisible(true); // Y la mostramos
+    }
+
+    
+    /**
+     * Método que llama a la función encargada de mostrar la ayuda
+     * @param evt Evento ocurrido.
+     */
+    private void iconAyudaActionPerformed(java.awt.event.ActionEvent evt) {
+        this.ayudaAyudaActionPerformed(evt);
+    }
+
+    
+    /**
+     * Método que llama la función encargada de mostrar el "acerca de"
+     * @param evt Evento ocurrido.
+     */
+    private void iconSalirActionPerformed(java.awt.event.ActionEvent evt) {
+        // Si ha pulsado sobre el icono de salir se llama a la función correspondiente
+        this.opcionArchivoSalirActionPerformed(evt);
+    }
+
+    
+    /**
+     * Método encargado de cerrar la aplicación. Para ello, antes lo notifica
+     * al coordinador y luego cierra la aplicación.
+     * @param evt Evento ocurrido.
+     */
+    private void opcionArchivoSalirActionPerformed(java.awt.event.ActionEvent evt) {
+        // 1 - Decirle al coordinador que nos vamos
+        opcionArchivoLogoutActionPerformed(evt);
+
+        // 2 - Cerrar la aplicación
+        System.exit(0);
+    }
+
+    
+    /**
+     * Cuando se pulse sobre el botón "Búscalo" se instancia el hilo encargado
+     * de la visualización y ocultamiento de la animación
+     * @param evt Evento ocurrido.
+     */
+    @SuppressWarnings("deprecation")
+	private void botonBuscarActionPerformed(java.awt.event.ActionEvent evt) {
+    	if(_conectado) {
+    		if(_hiloBusqueda!=null)
+    			_hiloBusqueda.stop();            	
+        	
+    		_hiloBusqueda = new Buscando(this, _loaderBuscando, cliente, _tablaResBusqueda);
+    		
+    		_hiloBusqueda.setNombre(cajaTextoNomFich.getText());
+    		_hiloBusqueda.start(); // Lanza el hilo
+    	}
+    }
+
+    
+    /**
+     * Método encargado de abrir una ventana (JFileChooser) para escoger los
+     * archivos (permite selección múltiple) de nuevos archivos que van a ser
+     * compartidos por el usuario
+     * @param evt Evento ocurrido.
+     */
+    private void anyadirRecursoMouseClicked(java.awt.event.MouseEvent evt) {
+        // Cuando se pulse en el botón Añadir Recurso
+        int opc = 0;
+        File [] ficheros;
+
+        // Creamos una ventana para que el usuario escoja su(s) fichero(s)
+        javax.swing.JFileChooser anyadir = new javax.swing.JFileChooser();
+        anyadir.setMultiSelectionEnabled(true); // Multiselección
+        anyadir.setFileSelectionMode(javax.swing.JFileChooser.FILES_ONLY);
+
+        opc = anyadir.showOpenDialog(this); // Se muestra el diálogo
+
+        EstrArchivo eA;
+        infoArchivo iA;
+        parteArchivo[] pA;
         
-        while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
-            if(archivo.equals(_modeloTablaDescargas.getValueAt(i, 0))) {
-            	encontrado=true;
-                aux = (JProgressBar) _modeloTablaDescargas.getValueAt(i, 2);
-                aux.setString(porcentaje+"%");
-                aux.setValue(porcentaje);
-                _tablaDescargas.repaint();
+        // Ahora comprobamos si ha pulsado sobre aceptar
+        if (opc == javax.swing.JFileChooser.APPROVE_OPTION) {
+            ficheros = anyadir.getSelectedFiles(); // Obtenemos los ficheros seleccionados
+            //String [] fich = new String[ficheros.length];
+            for (int i=0; i<ficheros.length; i++) {
+            	iA=getInfoArchivo(ficheros[i]);
+            	pA=new parteArchivo[1];
+            	pA[0]=new parteArchivo();
+            	pA[0].inicio=0;
+            	pA[0].fin=iA.tam;
+            	pA[0].pedido=false;
+            	pA[0].descargado=false;
+            	eA=new EstrArchivo(iA,pA);
+            	_easTmp.add(eA);
+                _modeloListaRecursos.addElement(ficheros[i].getPath());
             }
-            else
-            	i++;
         }
     }
     
-    /**
-     * Método que devuelve el valor del atributo "conectado"
-     * @return true si está conectado a la red P2P y false en caso contrario
-     */
-    public boolean conectado() {
- 		return _conectado;
- 	 }
-
- 	/**
- 	 * Mueve la descarga finalizada a compartidos
- 	 */
- 	public synchronized void finalizarDescarga(EstrArchivo archivo) {
- 		boolean encontrado=false;
- 		int i=0;
- 		 		
- 		_descargasActuales.remove(archivo.info.ruta);
- 		
- 		while(!encontrado && i<_modeloTablaDescargas.getRowCount()) {
-             if(archivo.info.nombre.equals(_modeloTablaDescargas.getValueAt(i, 0))) encontrado=true;
-             else i++;
-         }
- 		if(encontrado)
- 			eliminarDescarga(i);
- 		
- 		_modeloListaRecursos.addElement(archivo.info.ruta);
- 		
- 		almacenarDescarga(archivo);
- 	}
 
     /**
-     * @param args the command line arguments
+     * Función que obtiene la informacion de un fichero
+     * @param file Fichero a leer.
+     * @return Evento ocurrido.
      */
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ClienteP2P().setVisible(true);
+    private infoArchivo getInfoArchivo(File file) {
+   	 	infoArchivo aux = new infoArchivo();
+        CheckedInputStream suma = null;
+
+        try { // Se lee el fichero y se va creando el checksum
+        	FileInputStream f = new FileInputStream(file);
+            suma = new CheckedInputStream(f, new CRC32());
+            BufferedInputStream in = new BufferedInputStream(suma);
+
+          	while (in.read() != -1) {  }
+            in.close(); // Cerramos el fichero
+        }
+        catch (IOException ex) {
+      	  javax.swing.JOptionPane.showMessageDialog(this, 
+      			  "¡Error al calcular el checksum de \""+file.getName()+"\"!");
+        }
+
+        // Asignamos la información del archivo
+        aux.nombre=file.getName();
+        aux.ruta=file.getPath();
+        aux.checksum=suma.getChecksum().getValue();
+        aux.tam=file.length();    	
+
+        return aux;
+	}
+
+	
+    /**
+     * Cuando se pulse sobre el botón eliminar se evalúa si hay recursos seleccionados,
+     * y en caso de existir, se eliminan. Si no, se muestra un aviso
+     * @param evt Evento capturado.
+     */
+    private void quitarRecursoMouseClicked(java.awt.event.MouseEvent evt) {
+        // Obtenemos el indice que ocupan los elementos que se han seleccionado
+        int [] indices = _listaFicherosCompartidos.getSelectedIndices();
+        String fichero; 
+        String nombre=new String();
+               
+        // Si no hay ningun elemento seleccionado
+        if (indices.length == 0)
+            javax.swing.JOptionPane.showMessageDialog(this,
+                    "No ha seleccionado ningún elemento para eliminar");
+        
+        // Eliminamos desde el final para evitar problemas con los índices
+        for (int i=indices.length - 1; i>=0; i--) {
+            fichero=(String) _modeloListaRecursos.getElementAt(indices[i]);
+            nombre=fichero.substring(fichero.lastIndexOf("/")+1,fichero.length());
+            int j=0;
+            while(j<_easTmp.size()) {
+            	if(_easTmp.get(j).info.nombre.equals(nombre)) {
+            		_easTmp.remove(j);
+            		j=_easTmp.size();
+            	} else j++;
             }
-        });
+            _modeloListaRecursos.removeElementAt(indices[i]);
+        }
     }
+
+    
+    /**
+     * Cuando se pulse sobre el botón de actualizar la bibioteca se examinan los
+     * archivos que hay en la lista y se genera un XML con dicha información
+     * @param evt Evento ocurrido.
+     */
+    private void actualizarBibliotecaMouseClicked(java.awt.event.MouseEvent evt) {
+    	String resultado="";
+    	
+    	if(almacenarBiblioteca()) // Comprobamos que se ha guardado correctamente
+    	    resultado+="¡Archivo \""+_nombreBiblioteca+"\" generado correctamente!";
+        else // Error al guardar el archivo
+            resultado+="Error al generar el archivo \""+_nombreBiblioteca+"\"";
+        
+        if(_conectado)
+        	cliente.anyadir(_easTmp);
+        // Mostramos el mensaje mediante una ventanita
+        javax.swing.JOptionPane.showMessageDialog(this,resultado);
+    }
+
+    
+    /**
+     * Almacena la información de los archivos que posee el usuario en la biblioteca.
+     * @return true en caso de éxito, false en caso contrario.
+     */
+    private boolean almacenarBiblioteca() {
+    	Biblioteca bib = new Biblioteca(); // Instanciamos el objeto Biblioteca
+        boolean resultado=false;
+        
+        // Recorremos todos los elementos de la lista y los metemos en el xml
+        for (int i=0; i<_easTmp.size(); i++) {
+            bib.insertarNuevoArchivo(_easTmp.get(i));
+        }
+
+        if(bib.guardarXML()) // Archivo guardado correctamente
+            resultado=true;
+
+		return resultado;
+	}
+
+	
+    
+    /**
+     * Método que muestra la ventana de configuración de la aplicación
+     * @param evt Evento ocurrido.
+     */
+    private void opcionArchivoOpcionesActionPerformed(java.awt.event.ActionEvent evt) {
+        Opciones opciones = new Opciones(this, _ipservidor, _iplocal, _puerto, _tamBloque, _conexionesMaximas, _rutaDescargas, this);
+        opciones.setVisible(true);
+    }
+
+        
+    /**
+     * Función que carga en la aplicación todos los ficheros compartidos por el usuario
+     */
+    private void cargarBiblioteca() {
+        ParserXML parser = new ParserXML(_nombreBiblioteca);
+
+        // Parseamos primero el archivo XML para obtener el arbol cargado en memoria
+        	try {
+				parser.parsearArchivoXML();
+			} catch (IOException e) {
+				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion IOException");
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				javax.swing.JOptionPane.showMessageDialog(this, "Error, Excepcion ParserConfigurationException");
+				e.printStackTrace();
+			} catch (SAXException e) {
+				// Cuando el XML esté mal formado, se borra y se sale de la aplicación
+				javax.swing.JOptionPane.showMessageDialog(this, 
+						"¡Error grave! El fichero biblioteca está mal formado. Reinicie la aplicación.");	
+				File xmlBiblio = new File(_nombreBiblioteca);
+				// Si no se ha borrado correctamente el XML, se le pide que al usuario que lo haga él
+				if(!xmlBiblio.delete())
+					javax.swing.JOptionPane.showMessageDialog(this, 
+							"Por favor, borre manualmente el archivo \"" + _nombreBiblioteca + "\"");	
+				System.exit(0); // Salimos de la aplicación
+			}
+        
+        // Despues parseamos el arbol XML para extraer la informacion y meterla en el ArrayList
+			_easTmp = parser.parsearDocumento(_modeloListaRecursos, this);
+        
+        if(_conectado) // Y si está conectado, lo añadimos
+        	cliente.anyadir(_easTmp);
+    }
+
     
     // Variables declaration
+	private Buscando _hiloBusqueda;
+	private Hashtable<Integer,Archivo> _tablaResBusqueda;
+	private Hashtable<String,Downloader> _descargasActuales;
+	private Hashtable<EstrArchivo, JProgressBar> _descargasPendientes;
+    private int _tamBloque;
+    private int _conexionesMaximas;
+    private String _ipservidor;
+    private String _iplocal;
+    private int _puerto;
+	private String _rutaDescargas;
+    private String _nombreBiblioteca;
+    private boolean _conectado = false;
+    private MenuContextual _menuContextual;
+    private DefaultTableModel _modeloTablaDescargas = new DefaultTableModel();
+    private DefaultListModel _modeloListaRecursos = new DefaultListModel();
+    private DefaultTableModel _modeloTablaBusqueda = new DefaultTableModel();
+    private ArrayList<EstrArchivo> _easTmp;
+
     private javax.swing.JList _listaFicherosCompartidos;
     private javax.swing.JLabel _loaderBuscando;
     private javax.swing.JTable _tablaDescargas;
@@ -1491,4 +1560,6 @@ public class ClienteP2P extends javax.swing.JFrame {
     private javax.swing.JToolBar.Separator separador1;
     private javax.swing.JPopupMenu.Separator separadorArchivo;
     private javax.swing.JLabel valorEstadoActual;
+
+	private static final long serialVersionUID = 1L;
 }

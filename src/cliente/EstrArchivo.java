@@ -10,7 +10,11 @@ package cliente;
 
 public final class EstrArchivo implements org.omg.CORBA.portable.IDLEntity
 {
-  public cliente.infoArchivo info = null;
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+public cliente.infoArchivo info = null;
   public cliente.parteArchivo partes[] = null;
 
   public EstrArchivo ()

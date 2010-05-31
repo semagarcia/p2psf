@@ -10,7 +10,11 @@ package cliente;
 
 public final class infoArchivo implements org.omg.CORBA.portable.IDLEntity
 {
-  public String ruta = null;
+  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+public String ruta = null;
   public String nombre = null;
   public long tam = (long)0;
   public long checksum = (long)0;

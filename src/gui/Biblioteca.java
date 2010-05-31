@@ -1,5 +1,6 @@
 package gui;
 
+
 import java.io.*;
 
 import org.w3c.dom.Element;
@@ -13,36 +14,12 @@ import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl;
 
+
 /**
  * Esta clase es la encargada de crear un nuevo fichero XML a partir de los
  * archivos que hayan sido especificados para compartir
- * @author sema
  */
 public class Biblioteca {
-    // Etiquetas del archivo XML
-    private static final String ETIQUETA_BIBLIO = "biblioteca";
-    private static final String ETIQUETA_ARCHIVO = "archivo";
-    private static final String ETIQUETA_NOMBRE = "nombre";
-    private static final String ETIQUETA_RUTA = "ruta";
-    private static final String ETIQUETA_TAM = "tam";
-    private static final String ETIQUETA_CHECKSUM = "checksum";
-    private static final String ETIQUETA_SEEDS = "seed";
-    private static final String ETIQUETA_PEERS = "peers";
-    private static final String ETIQUETA_PARTE = "parte";
-    private static final String ETIQUETA_ID = "id";
-
-    // Codificacion
-    private static final String XML_VERSION = "1.0";
-    private static final String XML_ENCODING = "UTF-8";
-    private static final String JAVA_ENCODING = "UTF-8";
-
-    // Nombre del archivo
-    private static final String NOMBRE_ARCHIVO_XML = "MiBiblioteca.xml";
-
-    // Objetos
-    private Document documentoXML = null;
-    private Element biblioteca = null;
-
     /**
      * El constructor crea la estructura genérica del documento XML, con el nodo raíz
      */
@@ -63,6 +40,7 @@ public class Biblioteca {
         documentoXML.appendChild(biblioteca); // Agregar al documento principal
     }
 
+    
     /**
      * Esta clase es la que añade toda la información de la biblioteca, es decir,
      * es la que va insertando cada nodo "archivo"
@@ -125,6 +103,7 @@ public class Biblioteca {
         }
     }
 
+    
     /**
      * Función que genera el fichero XML
      * @return True o False en función de si fue correcto o hubo algún error
@@ -167,4 +146,28 @@ public class Biblioteca {
         
         return resultado;
     }
+
+    
+    // Etiquetas del archivo XML
+    private static final String ETIQUETA_BIBLIO = "biblioteca";
+    private static final String ETIQUETA_ARCHIVO = "archivo";
+    private static final String ETIQUETA_NOMBRE = "nombre";
+    private static final String ETIQUETA_RUTA = "ruta";
+    private static final String ETIQUETA_TAM = "tam";
+    private static final String ETIQUETA_CHECKSUM = "checksum";
+    private static final String ETIQUETA_SEEDS = "seed";
+    private static final String ETIQUETA_PEERS = "peers";
+    private static final String ETIQUETA_PARTE = "parte";
+
+    // Codificacion
+    private static final String XML_VERSION = "1.0";
+    private static final String XML_ENCODING = "UTF-8";
+    private static final String JAVA_ENCODING = "UTF-8";
+
+    // Nombre del archivo
+    private static final String NOMBRE_ARCHIVO_XML = "MiBiblioteca.xml";
+
+    // Objetos
+    private Document documentoXML = null;
+    private Element biblioteca = null;
 }
