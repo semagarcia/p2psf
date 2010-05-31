@@ -1,130 +1,51 @@
 package cliente;
 
-import gui.ClienteP2P;
 
+import gui.ClienteP2P;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-import javax.swing.JProgressBar;
-
 import middleware.MiddlewareException;
 import coordinador.Archivo;
 import coordinador.Coordinador;
 
+
+/**
+ * Clase que gestiona la descarga de un fichero.
+ */
 public class Downloader extends Thread {
+	
+	/** Ruta de descarga del fichero. */
 	public final String ruta;
+	
+	/** Semaforo que controla el número de hilos lanzados. */
 	public Semaforo lanzados;
+	
+	/** Semaforo que controla el acceso a la escritura en el fichero. */
 	public Semaforo escribir;
+	
+	/** Semaforo que controla el acceso a la información de archivos local. */
 	public Semaforo accederEas;
+	
+	/** Semaforo para que el hilo Downloader no esté en espera activa. */
 	public Semaforo esperar;
 
-	private Archivo _arch;
-	private long _tamPieza;
-	private ArrayList<parteArchivo> _descargar;
-	private Coordinador _coord;
-	private Hashtable<String, EstrArchivo> _eas;
-	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
-	private int _miId;
-	private float _porcentaje;
-	private ClienteP2P _interfaz;
-	private String _nombre;
-	private boolean _parar;
-	private Semaforo _esperarDownloader;
-	
-
-	// Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza
-	private void anotarDescarga(long inicio, long fin) {
-		long finActual=inicio+_tamPieza;
-		parteArchivo aux;
-
-		while(finActual<fin) {
-			aux=new parteArchivo(inicio,finActual,false,false);
-			_descargar.add(aux);
-			inicio=finActual;
-			finActual+=_tamPieza;
-		}
-		
-		aux=new parteArchivo(inicio,fin,false,false);
-		_descargar.add(aux);
-	}
 	
 	
-	
-	// Anota las partes a descargar
-	private void calcularDescargas(parteArchivo[] partes) {
-		long inicioActual=0;
-		boolean descartar=(partes!=null);
-		int i=0;
-		
-		while(descartar) {
-			//Descartar partes
-			if(inicioActual<partes[i].inicio) {
-				//Añadir desde inicioActual hasta partes[i]
-				anotarDescarga(inicioActual,partes[i].inicio);
-				inicioActual=partes[i].fin;
-				i++;
-				if(i>=partes.length) descartar=false;
-			}
-			else {
-				//Descartar desde _partes[i] hasta _partes[i+1]
-				inicioActual=partes[i].fin;
-				i++;
-				if(i>=partes.length) descartar=false;
-			}
-		}
-		//Añadir ultima parte del archivo
-		if(inicioActual<_arch.tam())
-			anotarDescarga(inicioActual,_arch.tam());
-	}
-
-
-	private boolean buscarPieza(int indicePeer, int indiceDescarga) {
-		boolean encontrado=false;
-		parteArchivo pieza=_descargar.get(indiceDescarga);
-		parteArchivo[] piezasPeer=_arch.getPartes(indicePeer);
-		int i=0;
-		
-		while(i<piezasPeer.length && !encontrado) {
-			if(pieza.inicio>=piezasPeer[i].inicio && pieza.fin<=piezasPeer[i].fin)
-				encontrado=true;
-			else i++;
-		}
-		
-		return encontrado;
-	}
-	
-
-	// Devuelve true si quedan piezas por pedir, false en caso contrario
-	private boolean pedir() {
-		boolean aux=false;
-		int i=0;
-
-		// Hay que ejecutarlo en exclusión mutua, ya que podría eliminarse una pieza a descargar
-		while(!aux && i<_descargar.size()) {
-			if(!_descargar.get(i).descargado) aux=true;
-			else i++;
-		}
-		
-		return aux;
-	}
-	
-	
-	private Peticion crearHilo(int idUsuario, parteArchivo pieza, Hashtable<Integer, Boolean> usuarios) {
-		Peticion p=null;
-		
-		try {
-			p=new Peticion(_coord.getUsuario(idUsuario), pieza, this, usuarios, idUsuario, _miId, _eas, _arch, _interfaz);
-		}
-		catch (MiddlewareException e) {
-			e.printStackTrace();
-		}
-		
-		return p;
-	}
-
-	
-	// Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
+	/**
+	 * Constructor de la clase. Almacena la información necesaria para comenzar la descarga. 
+	 * @param arch Referencia al archivo en CORBA.
+	 * @param partes Partes del archivo que ya posee el usuario.
+	 * @param porcentaje Porcentaje de la descarga completado.
+	 * @param numConex Número de conexiones máximas que pueden establecerse por fichero.
+	 * @param tamPieza Tamaño de la pieza a descargar por petición.
+	 * @param ruta Ruta donde se decargará el fichero.
+	 * @param coord Referencia al coordinador en CORBA.
+	 * @param miId Identificador del usuario que realiza la descarga.
+	 * @param accederEas Semaforo para acceder a la información local de archivos.
+	 * @param eas Información local de archivos.
+	 * @param interfaz Referencia a la interfaz de usuario.
+	 */
 	public Downloader(Archivo arch, parteArchivo[] partes, float porcentaje, int numConex, long tamPieza, String ruta, Coordinador coord, int miId, Semaforo accederEas, Hashtable<String, EstrArchivo> eas, ClienteP2P interfaz) {
 		super();
 		_arch=arch;
@@ -145,9 +66,28 @@ public class Downloader extends Thread {
 		_interfaz=interfaz;
 		_parar=false;
 		_porcentaje=new Float(porcentaje);
+		
 		calcularDescargas(partes);
 	}
 	
+	/**
+	 * Constructor de la clase. Almacena la información necesaria para comenzar la descarga.
+	 * Este constructor está pensado para cuando se ha parado la descarga y se quiere almacenar el
+	 * estado de la misma para poder continuarla, debido a que los hilos no pueden llamar a su método
+	 * start() dos veces. Por este motivo, el mecanismo es realizar una copia del estado de la descarga
+	 * y volver a lanzar un nuevo hilo con dicha información.
+	 * @param arch Referencia al archivo en CORBA.
+	 * @param numConex Número de conexiones máximas que pueden establecerse por fichero.
+	 * @param ruta Ruta donde se decargará el fichero.
+	 * @param tamPieza Tamaño de la pieza a descargar por petición.
+	 * @param coord Referencia al coordinador en CORBA.
+	 * @param miId Identificador del usuario que realiza la descarga.
+	 * @param eas Información local de archivos.
+	 * @param accederEas Semaforo para acceder a la información local de archivos.
+	 * @param interfaz Referencia a la interfaz de usuario.
+	 * @param porcentaje Porcentaje de la descarga completado.
+	 * @param descargar Piezas que quedan por descargar del fichero.
+	 */
 	public Downloader(Archivo arch, int numConex, String ruta, long tamPieza, Coordinador coord, int miId, Hashtable<String,EstrArchivo> eas, Semaforo accederEas, Float porcentaje, ClienteP2P interfaz, ArrayList<parteArchivo> descargar) {
 		super();
 		_arch=arch;
@@ -171,8 +111,9 @@ public class Downloader extends Thread {
 		}
 	
 	
-	
-	// Comienza a descargar el archivo lanzando un hilo por cada petición.
+	/**
+	 * Comienza a descargar el archivo lanzando un hilo por cada petición.
+	 */
 	public void run() {
 		_esperarDownloader.bajar();
 		try {
@@ -218,6 +159,13 @@ public class Downloader extends Thread {
 	}
 
 
+	/**
+	 * Para la descarga actual y devuelve un nuevo hilo Downloader, que contiene la información
+	 * de la descarga que se ha parado, preparado para reanudar la descarga mediante su método
+	 * start().
+	 * @return Hilo Downloader con la información actual de la descarga y preparado para
+	 * reiniciar la descarga mediante su método start().
+	 */
 	public Downloader parar() {
 		_parar=true;
 		
@@ -225,13 +173,152 @@ public class Downloader extends Thread {
 		
 		return copia();
 	}
+
 	
-	
+	/**
+	 * Para la descarga actual.
+	 */
 	public void matar() {
 		_parar=true;
 		_esperarDownloader.bajar();
 	}
 	
+
+	/**
+	 * Añade l% al porcentaje actual de la descarga.
+	 * @param l Porcentaje a añadir.
+	 */
+	public void addPorcentaje(float l) {
+		_porcentaje+=l;
+		_interfaz.actualizarDescarga(_nombre, Math.round(_porcentaje));
+	}
+
+
+	/**
+	 * Establece el id del usuario que realiza la descarga.
+	 * @param id Identificador del usuario que realiza la descarga.
+	 */
+	public void actualizarId(int id) {
+		_miId=id;
+	}
+	
+	/**
+	 * Añade los rangos a descargar en el array _descargar respetando el tamaño máximo de pieza.
+	 * @param inicio Posición de inicio de la pieza a descargar.
+	 * @param fin Posición final de la pieza a descargar.
+	 */
+	private void anotarDescarga(long inicio, long fin) {
+		long finActual=inicio+_tamPieza;
+		parteArchivo aux;
+
+		while(finActual<fin) {
+			aux=new parteArchivo(inicio,finActual,false,false);
+			_descargar.add(aux);
+			inicio=finActual;
+			finActual+=_tamPieza;
+		}
+		
+		aux=new parteArchivo(inicio,fin,false,false);
+		_descargar.add(aux);
+	}
+	
+	
+	/** 
+	 * Anota las partes a descargar.
+	 * @param partes Partes del archivo que el usuario ya posee.
+	 */
+	private void calcularDescargas(parteArchivo[] partes) {
+		long inicioActual=0;
+		boolean descartar=(partes!=null);
+		int i=0;
+		
+		while(descartar) {
+			//Descartar partes
+			if(inicioActual<partes[i].inicio) {
+				//Añadir desde inicioActual hasta partes[i]
+				anotarDescarga(inicioActual,partes[i].inicio);
+				inicioActual=partes[i].fin;
+				i++;
+				if(i>=partes.length) descartar=false;
+			}
+			else {
+				//Descartar desde _partes[i] hasta _partes[i+1]
+				inicioActual=partes[i].fin;
+				i++;
+				if(i>=partes.length) descartar=false;
+			}
+		}
+		//Añadir ultima parte del archivo
+		if(inicioActual<_arch.tam())
+			anotarDescarga(inicioActual,_arch.tam());
+	}
+
+
+	/**
+	 * Comprueba si un usuario posee la pieza indicada.
+	 * @param idPeer Identificador del usuario 
+	 * @param indiceDescarga Indice local de la pieza a comprobar
+	 * @return true si el usuario dispone de la pieza, false en caso contrario.
+	 */
+	private boolean buscarPieza(int idPeer, int indiceDescarga) {
+		boolean encontrado=false;
+		parteArchivo pieza=_descargar.get(indiceDescarga);
+		parteArchivo[] piezasPeer=_arch.getPartes(idPeer);
+		int i=0;
+		
+		while(i<piezasPeer.length && !encontrado) {
+			if(pieza.inicio>=piezasPeer[i].inicio && pieza.fin<=piezasPeer[i].fin)
+				encontrado=true;
+			else i++;
+		}
+		
+		return encontrado;
+	}
+	
+	
+	/**
+	 * Devuelve si quedan piezas por pedir o no.
+	 * @return true en caso de que queden piezas por pedir, false en caso contrario.
+	 */
+	private boolean pedir() {
+		boolean aux=false;
+		int i=0;
+
+		// Hay que ejecutarlo en exclusión mutua, ya que podría eliminarse una pieza a descargar
+		while(!aux && i<_descargar.size()) {
+			if(!_descargar.get(i).descargado) aux=true;
+			else i++;
+		}
+		
+		return aux;
+	}
+	
+
+	/**
+	 * Crea un hilo petición
+	 * @param idUsuario Identificador del usuario al cual se le realizará la petición.
+	 * @param pieza Pieza a descargar.
+	 * @param usuarios Diccionario que almacena a que usuarios se les han realizado peticiones
+	 * actualmente.
+	 * @return Hilo Peticion creado.
+	 */
+	private Peticion crearHilo(int idUsuario, parteArchivo pieza, Hashtable<Integer, Boolean> usuarios) {
+		Peticion p=null;
+		
+		try {
+			p=new Peticion(_coord.getUsuario(idUsuario), pieza, this, usuarios, idUsuario, _miId, _eas, _arch, _interfaz);
+		}
+		catch (MiddlewareException e) {
+			e.printStackTrace();
+		}
+		
+		return p;
+	}
+
+	
+	/**
+	 * Crea los hilos Peticion y los lanza.
+	 */
 	private void lanzarPeticiones() {
 		Enumeration<Integer> keys;
 		int usuario, i;
@@ -290,7 +377,7 @@ public class Downloader extends Thread {
 		if(hilos.size()==0) {
 			esperar.subir();
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(3000);  //Espera 3 segundos antes de volver a comprobar.
 			}
 			catch (InterruptedException e) {
 			}
@@ -299,7 +386,11 @@ public class Downloader extends Thread {
 
 
 
-	// Actualiza las tablas de usuarios
+	/**
+	 * Actualiza las tablas de usuarios del archivo.
+	 * @throws Exception CORBA puede lanzar una excepción si el archivo deja de existir por
+	 * algún motivo.
+	 */
 	private void actualizarUsuarios() throws Exception {
 		int[] seeds=_arch.getSeeds();
 		int[] peers=_arch.getPeers();
@@ -332,7 +423,12 @@ public class Downloader extends Thread {
 	}
 
 
-
+	/**
+	 * Busca un valor en un vector.
+	 * @param valor Valor a buscar.
+	 * @param vector Vector en el cual se realiza la búsqueda.
+	 * @return true en caso de encontrar el valor en el vector, false en caso contrario.
+	 */
 	private boolean buscar(int valor, int[] vector) {
 		boolean encontrado=false;
 		int i=0;
@@ -345,46 +441,51 @@ public class Downloader extends Thread {
 	}
 
 
-
-	//solo para depuracion
-	private void mostrarDescargar() {
-		parteArchivo aux;
-
-		System.out.println("Hay que descargar las siguientes piezas: ");
-		for(int i=0;i<_descargar.size();i++) {
-			aux=_descargar.get(i);
-			System.out.println(aux.inicio+"-"+aux.fin+":"+i+";"+aux.pedido+","+aux.descargado);
-		}
-	}
-	
-	
-	//solo para depuracion
-	private void mostrarUsuarios() {
-		System.out.print("Seeds: ");
-		Enumeration<Integer> k=_seedsSolicitados.keys();
-		while(k.hasMoreElements()) System.out.print(k.nextElement()+" ");
-		System.out.print("\nPeers: ");
-		k=_peersSolicitados.keys();
-		while(k.hasMoreElements()) System.out.print(k.nextElement()+" ");
-		System.out.print("\n");
-	}
-
-
-
-	public void addPorcentaje(float l) {
-		_porcentaje+=l;
-		_interfaz.actualizarDescarga(_nombre, Math.round(_porcentaje));
-	}
-
-
-
+	/**
+	 * Devuelve un nuevo hilo Downloader con la misma información que él mismo.
+	 * @return Hilo Downloader con la información actual de la descarga y preparado para
+	 * reiniciar la descarga mediante su método start().
+	 */
 	private Downloader copia() {
 		return new Downloader(_arch, this.lanzados.getInicial(), ruta, _tamPieza, _coord, _miId, _eas, accederEas, _porcentaje, _interfaz, _descargar);
 	}
 
 
-
-	public void actualizarId(int id) {
-		_miId=id;
-	}
+	
+	/** Referencia al archivo en CORBA. */
+	private Archivo _arch;
+	
+	/** Tamaño máximo de las piezas. */
+	private long _tamPieza;
+	
+	/** Vector de piezas a descargar. */
+	private ArrayList<parteArchivo> _descargar;
+	
+	/** Referencia al coordinador en CORBA. */
+	private Coordinador _coord;
+	
+	/** Información local de los archivos. */
+	private Hashtable<String, EstrArchivo> _eas;
+	
+	/** Información sobre a que usuarios se les ha solicitado alguna parte y a cuales no. */
+	private Hashtable<Integer, Boolean> _seedsSolicitados, _peersSolicitados;
+	
+	/** Identificador del usuario que realiza la descarga. */
+	private int _miId;
+	
+	/** Porcentaje actual de la descarga. */
+	private float _porcentaje;
+	
+	/** Referencia a la interfaz de usuario, necesaria para actualizar la información mostrada de la descarga. */
+	private ClienteP2P _interfaz;
+	
+	/** Nombre del fichero a descargar. */
+	private String _nombre;
+	
+	/** Variable para parar éste el hilo. */
+	private boolean _parar;
+	
+	/** Semaforo para esperar a que el hilo Downloader finalize su ejecución, necesario si queremos
+	 realizar una copiar de dicho hilo con información real y actualizada. */
+	private Semaforo _esperarDownloader;
 }

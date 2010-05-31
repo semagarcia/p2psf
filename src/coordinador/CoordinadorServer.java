@@ -1,9 +1,18 @@
 package coordinador;
 
+
 import middleware.JavaORB;
 import middleware.Middleware;
 
+
+/**
+ * Implementación del servidor Coordinador.
+ */
 public class CoordinadorServer {
+	/**
+	 * Crea una instancia del sirviente, lo hace público en CORBA y se pone a la escucha.
+	 * @param args Argumentos pasados.
+	 */
 	public static void main(String args[]) {
 		try {
 			// Inicialiación del ORB
@@ -30,8 +39,5 @@ public class CoordinadorServer {
 			System.err.println("ERROR: " + e);
 			e.printStackTrace(System.out);
 		}
-
-		System.out.println("CoordinadorServer Sale ...");
-
 	}
 }
